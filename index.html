@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>سجّل بياناتك - اعدادية أم قصر للبنين</title>
+<meta name="description" content="استمارة تسجيل بيانات الطلاب - اعدادية أم قصر للبنين">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC-kRs2R9mBegcMoUsl7Fi6vg3bLlZTqRY",
+    authDomain: "um-qasr-teachers.firebaseapp.com",
+    projectId: "um-qasr-teachers",
+    storageBucket: "um-qasr-teachers.firebasestorage.app",
+    messagingSenderId: "10475015276",
+    appId: "1:10475015276:web:1e53b45d0bcba7e0431c49"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.__fb = { db, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where };
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<!-- ExcelJS for Excel export with embedded images -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+
+<style>
+  :root{
+    --violet:#7C3AED;
+    --violet-2:#5B21B6;
+    --pink:#F472B6;
+    --amber:#FBBF24;
+    --sky:#38BDF8;
+    --bg:#FAFAFF;
+    --card:#ffffff;
+    --ok:#16A34A;
+    --danger:#DC2626;
+    --text:#1E1B2E;
+    --muted:#736F87;
+    --border:#EAE6F7;
+    --radius:20px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI', Tahoma, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  .container{max-width:760px;margin:0 auto;padding:0 16px;}
+
+  /* ---------- Hero header ---------- */
+  header.top{
+    position:relative;
+    padding:0 0 44px;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 500px 260px at 15% -10%, rgba(251,191,36,.55), transparent 60%),
+      radial-gradient(ellipse 600px 320px at 110% 10%, rgba(56,189,248,.45), transparent 55%),
+      linear-gradient(160deg, var(--violet) 0%, var(--violet-2) 65%, #3B1370 100%);
+  }
+  header.top::after{
+    content:"";
+    position:absolute;left:0;right:0;bottom:-1px;height:40px;
+    background:var(--bg);
+    border-radius:50% 50% 0 0 / 100% 100% 0 0;
+    transform:scale(1.4);
+  }
+  .hero-inner{position:relative;z-index:1;padding:30px 16px 0;text-align:center;}
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.35);
+    color:#FDE68A;
+    padding:7px 16px;border-radius:999px;
+    font-size:13px;font-weight:700;
+    margin-bottom:16px;
+  }
+  header.top h1{
+    color:#fff;
+    font-size:26px;
+    margin:0 0 8px;
+    font-weight:800;
+    line-height:1.35;
+  }
+  header.top h1 span{color:var(--amber);}
+  header.top p{
+    color:#E4DBFF;
+    margin:0;
+    font-size:14.5px;
+    max-width:420px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:22px 18px;
+    margin-bottom:18px;
+    box-shadow:0 10px 30px -14px rgba(92,38,190,.18);
+    border:1px solid var(--border);
+  }
+  .card-head{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:18px;
+  }
+  .card-head .dot{
+    width:34px;height:34px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;
+    background:linear-gradient(135deg, var(--violet), var(--pink));
+    color:#fff;flex-shrink:0;
+  }
+  .card-head h2{font-size:16.5px;margin:0;font-weight:800;}
+  .section-hint{
+    background:#F4F0FF;border:1px solid #E4D9FF;border-radius:12px;
+    padding:10px 13px;margin-bottom:16px;
+    font-size:12.5px;line-height:1.7;color:#4C3A80;
+  }
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:13.5px;font-weight:700;
+    margin-bottom:6px;color:var(--text);
+  }
+  .field .req{color:var(--pink);}
+  .field input, .field select, .field textarea{
+    width:100%;
+    border:1.5px solid var(--border);
+    background:#FCFBFF;
+    border-radius:13px;
+    padding:11px 13px;
+    font-size:14.5px;
+    font-family:inherit;
+    color:var(--text);
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;
+    border-color:var(--violet);
+    box-shadow:0 0 0 4px rgba(124,58,237,.12);
+  }
+  .field .hint{font-size:12px;color:var(--muted);margin-top:4px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.row2{grid-template-columns:1fr;}}
+
+  /* ---------- Photo box ---------- */
+  .photo-box{
+    border:2px dashed #D9CCFB;
+    border-radius:18px;
+    padding:26px 16px;
+    text-align:center;
+    cursor:pointer;
+    background:linear-gradient(180deg, #FBF9FF, #F5F0FF);
+    transition:border-color .15s, background .15s;
+  }
+  .photo-box:hover{border-color:var(--violet);}
+  .photo-box.has-img{padding:14px;}
+  .photo-box img{
+    width:96px;height:96px;object-fit:cover;
+    border-radius:16px;margin-bottom:8px;
+    border:3px solid #fff;box-shadow:0 6px 18px rgba(92,38,190,.25);
+  }
+  .photo-box .icon{font-size:32px;margin-bottom:8px;}
+  .photo-box .txt{font-size:13.5px;color:var(--muted);font-weight:700;}
+  .photo-box input{display:none;}
+
+  /* ---------- Buttons ---------- */
+  .btn-submit{
+    width:100%;
+    background:linear-gradient(135deg, var(--violet), #9333EA 50%, var(--pink));
+    color:#fff;border:none;border-radius:16px;
+    padding:16px;font-size:16px;font-weight:800;
+    cursor:pointer;
+    box-shadow:0 12px 26px -10px rgba(124,58,237,.55);
+    transition:transform .12s, box-shadow .12s;
+  }
+  .btn-submit:hover{transform:translateY(-1px);}
+  .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+  .msg{
+    border-radius:14px;padding:13px 16px;margin-bottom:16px;
+    font-size:14px;font-weight:700;display:none;
+  }
+  .msg.ok{background:#EAFBF1;color:#0F7A3C;border:1px solid #B9F2CE;}
+  .msg.err{background:#FDEEEE;color:#B3261E;border:1px solid #F6C8C6;}
+
+
+  footer{text-align:center;color:var(--muted);font-size:12.5px;padding:24px 16px 0;}
+  footer .designer{
+    margin-top:6px;font-size:12px;color:var(--muted);
+  }
+  footer .designer span{
+    color:var(--violet-2);font-weight:800;
+  }
+</style>
+</head>
+<body>
+
+<div id="updateBanner">✅ تم تحديث الموقع بواسطة علي محمد دينار</div>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const b = document.getElementById('updateBanner');
+    setTimeout(() => b.classList.add('show'), 100);
+    setTimeout(() => b.classList.remove('show'), 4000);
+  });
+</script>
+
+<header class="top">
+  <div class="hero-inner">
+    <div class="hero-badge">🎒 اعدادية أم قصر للبنين</div>
+    <h1>هلا فيك يا <span>بطل</span> 👋<br>سجّل بياناتك بدقيقتين</h1>
+    <p>عبّي المعلومات وحطلها صورتك، وخلها عندنا محفوظة طول السنة.</p>
+  </div>
+</header>
+
+<div class="container" style="margin-top:-26px;position:relative;z-index:2;">
+
+  <div class="msg ok" id="successMsg">✔ تم إرسال بياناتك بنجاح! رقم الطلب: <b id="refNumOut"></b></div>
+  <div class="msg err" id="formMsg"></div>
+
+  <div class="card" style="background:linear-gradient(135deg, #FFF7E0, #FFEFD1);border-color:#FBE3A8;">
+    <div style="font-size:13.5px;line-height:1.8;color:#7A5A00;font-weight:600;">
+      📝 <b>قبل ما تبدأ:</b> جاوب على كل الأسئلة اللي فيها علامة <span style="color:#F472B6;font-weight:800;">*</span> لأنها مطلوبة، والباقي اختياري. إذا انحبست بأي سؤال، اسأل أهلك أو معلمك يساعدونك. خذ وقتك، ما في عجلة 🙂
+    </div>
+  </div>
+
+  <form id="studentForm" novalidate>
+
+    <!-- 1. بيانات الأب والأم -->
+    <div class="card">
+      <div class="card-head"><div class="dot">👨‍👩‍👦</div><h2>بيانات الطالب والأب والأم</h2></div>
+      <div class="section-hint">
+        💡 اكتب اسمك واسم أبوك وجدك وجد أبوك بالترتيب (مثال: أحمد - محمد - علي - حسين). هذا يظهر في هويتك الرسمية. اسأل أهلك إذا ما تعرف اسم الجد بالضبط.
+      </div>
+
+      <div class="field">
+        <label>اسم الطالب <span class="req">*</span></label>
+        <input type="text" id="studentFirstName" required placeholder="اسم الطالب">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>اسم الأب <span class="req">*</span></label>
+          <input type="text" id="fatherName" required placeholder="اسم الأب">
+        </div>
+        <div class="field">
+          <label>اسم جد الطالب <span class="req">*</span></label>
+          <input type="text" id="grandfatherName" required placeholder="اسم جد الطالب">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>اسم جد الوالد <span class="req">*</span></label>
+          <input type="text" id="fatherGrandfatherName" required placeholder="اسم جد الوالد">
+        </div>
+        <div class="field">
+          <label>اللقب <span class="req">*</span></label>
+          <input type="text" id="lastName" required placeholder="اللقب / النسبة">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>اسم الأم <span class="req">*</span></label>
+        <input type="text" id="motherName" required placeholder="اسم الأم">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>اسم والد الأم <span class="req">*</span></label>
+          <input type="text" id="motherFatherName" required placeholder="اسم والد الأم">
+        </div>
+        <div class="field">
+          <label>اسم جد الأم <span class="req">*</span></label>
+          <input type="text" id="motherGrandfatherName" required placeholder="اسم جد الأم">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>تاريخ التولد <span class="req">*</span></label>
+        <input type="date" id="birthDate" required>
+      </div>
+    </div>
+
+    <!-- 2. وثيقة التعريف -->
+    <div class="card">
+      <div class="card-head"><div class="dot">🪪</div><h2>وثيقة التعريف (للطالب)</h2></div>
+      <div class="section-hint">
+        💡 اختر نوع الهوية اللي عندك أنت (مو أبوك)، سواء بطاقة موحدة أو هوية أحوال مدنية أو شهادة ولادة. إذا ما عندك واحدة منها، اختر "أخرى". اطلب من أهلك مساعدتك بكتابة الرقم الصحيح.
+      </div>
+
+      <div class="field">
+        <label>نوع الهوية <span class="req">*</span></label>
+        <select id="idType" required>
+          <option value="">اختر نوع الهوية</option>
+          <option value="هوية الأحوال المدنية">هوية الأحوال المدنية</option>
+          <option value="البطاقة الوطنية الموحدة">البطاقة الوطنية الموحدة</option>
+          <option value="شهادة ولادة">شهادة ولادة</option>
+          <option value="أخرى">أخرى</option>
+        </select>
+      </div>
+
+      <div class="field hidden" id="unifiedCardWrap">
+        <label>رقم البطاقة الوطنية الموحدة <span class="req">*</span></label>
+        <input type="text" id="unifiedCardNumber" placeholder="رقم البطاقة الموحدة" inputmode="numeric">
+      </div>
+      <div class="field hidden" id="civilIdWrap">
+        <label>رقم هوية الأحوال المدنية <span class="req">*</span></label>
+        <input type="text" id="civilIdNumber" placeholder="رقم الهوية" inputmode="numeric">
+      </div>
+      <div class="field hidden" id="birthCertWrap">
+        <label>رقم شهادة الولادة <span class="req">*</span></label>
+        <input type="text" id="birthCertNumber" placeholder="رقم شهادة الولادة" inputmode="numeric">
+      </div>
+      <div class="field hidden" id="otherIdWrap">
+        <label>رقم الوثيقة <span class="req">*</span></label>
+        <input type="text" id="otherIdNumber" placeholder="رقم الوثيقة">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>بلد الإصدار <span class="req">*</span></label>
+          <input type="text" id="idIssueCountry" required value="العراق">
+        </div>
+        <div class="field">
+          <label>الرقم الإحصائي</label>
+          <input type="text" id="statisticalNumber" placeholder="اختياري" inputmode="numeric">
+        </div>
+      </div>
+
+      <label class="checkbox-field" for="hasFatherId">
+        <input type="checkbox" id="hasFatherId">
+        <span>إدخال هوية الأب؟ (اختياري)</span>
+      </label>
+
+      <div class="sub-block hidden" id="fatherIdBlock">
+        <div class="row2">
+          <div class="field">
+            <label>نوع هوية الأب</label>
+            <select id="fatherIdType">
+              <option value="">اختر</option>
+              <option value="هوية الأحوال المدنية">هوية الأحوال المدنية</option>
+              <option value="البطاقة الوطنية الموحدة">البطاقة الوطنية الموحدة</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>رقم هوية الأب</label>
+            <input type="text" id="fatherIdNumber" placeholder="رقم الهوية" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- صورة الطالب -->
+    <div class="card">
+      <div class="card-head"><div class="dot">📷</div><h2>الصورة الشخصية</h2></div>
+      <div class="section-hint">
+        💡 حط صورة واضحة لوجهك بس (بدون نظارة شمس أو قبعة)، إما تلتقطها بالكاميرا الحين أو تختار وحدة موجودة عندك بالجوال.
+      </div>
+      <div class="field">
+        <div class="photo-box" id="photoBox">
+          <input type="file" id="photoInput" accept="image/*">
+          <div id="photoPlaceholder">
+            <div class="icon">📸</div>
+            <div class="txt">اضغط لاختيار صورة من الكاميرا أو المعرض</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. بيانات شخصية -->
+    <div class="card">
+      <div class="card-head"><div class="dot">🧾</div><h2>بيانات شخصية</h2></div>
+      <div class="section-hint">
+        💡 هذا القسم أسئلة بسيطة عن نفسك: جنسيتك، ديانتك، لغتك اللي تتكلم بيها بالبيت. إذا ما تعرف فئة دمك، اتركها فاضية ولا مشكلة. رقم هاتف الأب لازم يكون رقمه الفعّال حتى تقدر المدرسة تتواصل وياه.
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>الجنس <span class="req">*</span></label>
+          <select id="gender" required>
+            <option value="">اختر</option>
+            <option value="ذكر">ذكر</option>
+            <option value="أنثى">أنثى</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الجنسية <span class="req">*</span></label>
+          <select id="nationality" required>
+            <option value="">اختر</option>
+            <option value="عراقي">عراقي</option>
+            <option value="مصر">مصر</option>
+            <option value="السعودية">السعودية</option>
+            <option value="الأردن">الأردن</option>
+            <option value="سوريا">سوريا</option>
+            <option value="لبنان">لبنان</option>
+            <option value="فلسطين">فلسطين</option>
+            <option value="اليمن">اليمن</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>دولة التولد</label>
+          <input type="text" id="birthCountry" placeholder="اختياري">
+        </div>
+        <div class="field">
+          <label>مسقط الرأس</label>
+          <input type="text" id="birthPlace" placeholder="اختياري">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>اللغة الأم <span class="req">*</span></label>
+          <select id="motherTongue" required>
+            <option value="">اختر</option>
+            <option value="العربية">العربية</option>
+            <option value="الكردية">الكردية</option>
+            <option value="التركمانية">التركمانية</option>
+            <option value="السريانية">السريانية</option>
+            <option value="اليزيدية">اليزيدية</option>
+            <option value="الإنكليزية">الإنكليزية</option>
+            <option value="الفرنسية">الفرنسية</option>
+            <option value="الإسبانية">الإسبانية</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>فئة الدم</label>
+          <select id="bloodType">
+            <option value="">اختر</option>
+            <option value="+A">+A</option>
+            <option value="-A">-A</option>
+            <option value="+B">+B</option>
+            <option value="-B">-B</option>
+            <option value="+AB">+AB</option>
+            <option value="-AB">-AB</option>
+            <option value="+O">+O</option>
+            <option value="-O">-O</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>الديانة <span class="req">*</span></label>
+          <select id="religion" required>
+            <option value="">اختر</option>
+            <option value="الإسلام">الإسلام</option>
+            <option value="المسيحية">المسيحية</option>
+            <option value="الأزيدية">الأزيدية</option>
+            <option value="الصابئة">الصابئة</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>رقم هاتف الأب <span class="req">*</span></label>
+          <input type="tel" id="fatherPhone" required placeholder="07xxxxxxxxx" pattern="07[0-9]{9}" maxlength="11" inputmode="numeric" title="رقم هاتف عراقي صحيح مثل 07701234567">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ملاحظات</label>
+        <textarea id="notes" rows="2" placeholder="اختياري"></textarea>
+      </div>
+    </div>
+
+    <!-- 4. بيانات دراسية -->
+    <div class="card">
+      <div class="card-head"><div class="dot">🏫</div><h2>بيانات دراسية</h2></div>
+      <div class="section-hint">
+        💡 اختر صفك وشعبتك بالضبط زي ما مسجل بالمدرسة. إذا عندك صعوبة بالتعلم أو أي احتياج خاص، اختره من القائمة حتى تساعدك المدرسة بشكل أفضل. باقي الأسئلة تخص عائلتك مو أنت، اسأل أهلك عليها.
+      </div>
+
+      <div class="field">
+        <label>الاحتياجات الخاصة، إن وجدت</label>
+        <select id="specialNeeds">
+          <option value="">لا يوجد</option>
+          <option value="إعاقة فيزياوي">إعاقة فيزياوي</option>
+          <option value="إعاقة بصري">إعاقة بصري</option>
+          <option value="إعاقة سمعي">إعاقة سمعي</option>
+          <option value="إعاقة ذهني">إعاقة ذهني</option>
+          <option value="إعاقة نفسي">إعاقة نفسي</option>
+          <option value="توحد">توحد</option>
+          <option value="بطيء تعلم">بطيء تعلم</option>
+        </select>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>لغة الدراسة <span class="req">*</span></label>
+          <select id="studyLanguage" required>
+            <option value="العربية">العربية</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>المستوى المعيشي <span class="req">*</span></label>
+          <select id="livingStandard" required>
+            <option value="">اختر</option>
+            <option value="تحت خط الفقر">تحت خط الفقر</option>
+            <option value="الطبقة الفقيرة">الطبقة الفقيرة</option>
+            <option value="الطبقة الوسطى">الطبقة الوسطى</option>
+            <option value="الطبقة العليا">الطبقة العليا</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>مشمول بمنحة الرعاية الاجتماعية؟ <span class="req">*</span></label>
+        <select id="socialGrant" required>
+          <option value="">اختر</option>
+          <option value="نعم">نعم</option>
+          <option value="لا">لا</option>
+        </select>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>الصف الدراسي <span class="req">*</span></label>
+          <select id="grade" required>
+            <option value="">اختر الصف</option>
+            <option value="الأول متوسط">الأول متوسط</option>
+            <option value="الثاني متوسط">الثاني متوسط</option>
+            <option value="الثالث متوسط">الثالث متوسط</option>
+            <option value="الرابع إعدادي علمي">الرابع إعدادي علمي</option>
+            <option value="الرابع إعدادي أدبي">الرابع إعدادي أدبي</option>
+            <option value="الخامس إعدادي علمي">الخامس إعدادي علمي</option>
+            <option value="الخامس إعدادي أدبي">الخامس إعدادي أدبي</option>
+            <option value="السادس إعدادي علمي">السادس إعدادي علمي</option>
+            <option value="السادس إعدادي أدبي">السادس إعدادي أدبي</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الشعبة</label>
+          <select id="section">
+            <option value="">اختر</option>
+            <option value="أ">أ</option>
+            <option value="ب">ب</option>
+            <option value="ج">ج</option>
+            <option value="د">د</option>
+            <option value="هـ">هـ</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>المحافظة</label>
+          <select id="governorate">
+            <option value="">اختر المحافظة</option>
+            <option value="بغداد">بغداد</option>
+            <option value="البصرة">البصرة</option>
+            <option value="نينوى">نينوى</option>
+            <option value="أربيل">أربيل</option>
+            <option value="السليمانية">السليمانية</option>
+            <option value="دهوك">دهوك</option>
+            <option value="كركوك">كركوك</option>
+            <option value="ديالى">ديالى</option>
+            <option value="صلاح الدين">صلاح الدين</option>
+            <option value="الأنبار">الأنبار</option>
+            <option value="بابل">بابل</option>
+            <option value="كربلاء">كربلاء</option>
+            <option value="النجف">النجف</option>
+            <option value="واسط">واسط</option>
+            <option value="القادسية">القادسية</option>
+            <option value="المثنى">المثنى</option>
+            <option value="ذي قار">ذي قار</option>
+            <option value="ميسان">ميسان</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>القضاء / الناحية</label>
+          <input type="text" id="districtSub" placeholder="اسم القضاء أو الناحية">
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. العنوان -->
+    <div class="card">
+      <div class="card-head"><div class="dot">📍</div><h2>العنوان</h2></div>
+      <div class="section-hint">
+        💡 اكتب وين تسكن بالضبط حتى نلگاك بسهولة. "أقرب نقطة دالة" يعني أقرب مكان معروف جنب بيتكم (مثال: قرب جامع النور أو مقابل مدرسة كذا) حتى يكون العنوان واضح.
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>المدينة / القرية <span class="req">*</span></label>
+          <input type="text" id="city" required placeholder="المدينة أو القرية">
+        </div>
+        <div class="field">
+          <label>الحي <span class="req">*</span></label>
+          <input type="text" id="district" required placeholder="اسم الحي">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>المحلة <span class="req">*</span></label>
+          <input type="text" id="mahalla" required placeholder="رقم أو اسم المحلة">
+        </div>
+        <div class="field">
+          <label>زقاق</label>
+          <input type="text" id="alley" placeholder="اختياري">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>عنوان 1</label>
+        <input type="text" id="addressLine1" placeholder="اختياري">
+      </div>
+      <div class="field">
+        <label>عنوان 2</label>
+        <input type="text" id="addressLine2" placeholder="اختياري">
+      </div>
+      <div class="field">
+        <label>أقرب نقطة دالة <span class="req">*</span></label>
+        <input type="text" id="landmark" required placeholder="مثال: قرب جامع / مدرسة معروفة">
+      </div>
+      <div class="field">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="email" placeholder="إن وجد">
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">إرسال بياناتي 🚀</button>
+  </form>
+</div>
+
+<footer>
+  اعدادية أم قصر للبنين — نظام تسجيل بيانات الطلاب
+  <div class="designer">تصميم وتطوير: <span>علي محمد دينار</span></div>
+</footer>
+
+<script>
+const COLLECTION_NAME = "students";
+const ADMIN_CODE = "199755";
+
+let fb = null;
+let fbReadyPromise = new Promise((resolve) => {
+  if (window.__fb){ fb = window.__fb; resolve(); }
+  else window.addEventListener('firebase-ready', () => { fb = window.__fb; resolve(); }, { once:true });
+});
+
+/* ---------- Conditional ID type fields ---------- */
+const idType = document.getElementById('idType');
+const unifiedCardWrap = document.getElementById('unifiedCardWrap');
+const civilIdWrap = document.getElementById('civilIdWrap');
+const birthCertWrap = document.getElementById('birthCertWrap');
+const otherIdWrap = document.getElementById('otherIdWrap');
+const unifiedCardNumber = document.getElementById('unifiedCardNumber');
+const civilIdNumber = document.getElementById('civilIdNumber');
+const birthCertNumber = document.getElementById('birthCertNumber');
+const otherIdNumber = document.getElementById('otherIdNumber');
+
+function updateIdTypeFields(){
+  unifiedCardWrap.classList.add('hidden');
+  civilIdWrap.classList.add('hidden');
+  birthCertWrap.classList.add('hidden');
+  otherIdWrap.classList.add('hidden');
+  unifiedCardNumber.required = false;
+  civilIdNumber.required = false;
+  birthCertNumber.required = false;
+  otherIdNumber.required = false;
+
+  if (idType.value === 'البطاقة الوطنية الموحدة'){
+    unifiedCardWrap.classList.remove('hidden');
+    unifiedCardNumber.required = true;
+  } else if (idType.value === 'هوية الأحوال المدنية'){
+    civilIdWrap.classList.remove('hidden');
+    civilIdNumber.required = true;
+  } else if (idType.value === 'شهادة ولادة'){
+    birthCertWrap.classList.remove('hidden');
+    birthCertNumber.required = true;
+  } else if (idType.value === 'أخرى'){
+    otherIdWrap.classList.remove('hidden');
+    otherIdNumber.required = true;
+  }
+}
+idType.addEventListener('change', updateIdTypeFields);
+updateIdTypeFields();
+
+/* ---------- Father ID checkbox ---------- */
+const hasFatherId = document.getElementById('hasFatherId');
+const fatherIdBlock = document.getElementById('fatherIdBlock');
+hasFatherId.addEventListener('change', () => {
+  fatherIdBlock.classList.toggle('hidden', !hasFatherId.checked);
+});
+
+/* ---------- Photo handling ---------- */
+const photoBox = document.getElementById('photoBox');
+const photoInput = document.getElementById('photoInput');
+const photoPlaceholder = document.getElementById('photoPlaceholder');
+let photoBase64 = "";
+
+photoBox.addEventListener('click', () => photoInput.click());
+
+photoInput.addEventListener('change', () => {
+  const file = photoInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 700;
+      let w = img.width, h = img.height;
+      if (w > h && w > MAX){ h = h * (MAX / w); w = MAX; }
+      else if (h > MAX){ w = w * (MAX / h); h = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      photoBox.classList.add('has-img');
+      photoBox.innerHTML = `<img src="${photoBase64}"><div class="txt">تم اختيار الصورة (اضغط للتغيير)</div>`;
+      photoBox.appendChild(photoInput);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+/* ---------- Form submit ---------- */
+const form = document.getElementById('studentForm');
+const submitBtn = document.getElementById('submitBtn');
+const formMsg = document.getElementById('formMsg');
+const successMsg = document.getElementById('successMsg');
+const refNumOut = document.getElementById('refNumOut');
+
+function esc(v){
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  formMsg.style.display = 'none';
+  successMsg.style.display = 'none';
+
+  if (!form.checkValidity()){
+    form.reportValidity();
+    return;
+  }
+
+  if (idType.value === 'البطاقة الوطنية الموحدة' && !unifiedCardNumber.value.trim()){
+    formMsg.className = 'msg err';
+    formMsg.textContent = 'الرجاء إدخال رقم البطاقة الوطنية الموحدة.';
+    formMsg.style.display = 'block';
+    unifiedCardNumber.focus();
+    return;
+  }
+  if (idType.value === 'هوية الأحوال المدنية' && !civilIdNumber.value.trim()){
+    formMsg.className = 'msg err';
+    formMsg.textContent = 'الرجاء إدخال رقم هوية الأحوال المدنية.';
+    formMsg.style.display = 'block';
+    civilIdNumber.focus();
+    return;
+  }
+  if (idType.value === 'شهادة ولادة' && !birthCertNumber.value.trim()){
+    formMsg.className = 'msg err';
+    formMsg.textContent = 'الرجاء إدخال رقم شهادة الولادة.';
+    formMsg.style.display = 'block';
+    birthCertNumber.focus();
+    return;
+  }
+  if (idType.value === 'أخرى' && !otherIdNumber.value.trim()){
+    formMsg.className = 'msg err';
+    formMsg.textContent = 'الرجاء إدخال رقم الوثيقة.';
+    formMsg.style.display = 'block';
+    otherIdNumber.focus();
+    return;
+  }
+
+  if (!photoBase64){
+    formMsg.className = 'msg err';
+    formMsg.textContent = 'الرجاء اختيار صورة للطالب قبل الإرسال.';
+    formMsg.style.display = 'block';
+    window.scrollTo({top: photoBox.getBoundingClientRect().top + window.scrollY - 100, behavior:'smooth'});
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'جارِ الإرسال...';
+
+  await fbReadyPromise;
+
+  const refNumber = 'STU-' + Date.now().toString().slice(-8);
+
+  const data = {
+    referenceNumber: refNumber,
+    // 1. بيانات الطالب والأب والأم
+    studentFirstName: document.getElementById('studentFirstName').value.trim(),
+    fatherName: document.getElementById('fatherName').value.trim(),
+    grandfatherName: document.getElementById('grandfatherName').value.trim(),
+    fatherGrandfatherName: document.getElementById('fatherGrandfatherName').value.trim(),
+    lastName: document.getElementById('lastName').value.trim(),
+    motherName: document.getElementById('motherName').value.trim(),
+    motherFatherName: document.getElementById('motherFatherName').value.trim(),
+    motherGrandfatherName: document.getElementById('motherGrandfatherName').value.trim(),
+    birthDate: document.getElementById('birthDate').value.trim(),
+    // 2. وثيقة التعريف
+    idType: idType.value,
+    unifiedCardNumber: unifiedCardNumber.value.trim(),
+    civilIdNumber: civilIdNumber.value.trim(),
+    birthCertNumber: birthCertNumber.value.trim(),
+    otherIdNumber: otherIdNumber.value.trim(),
+    idIssueCountry: document.getElementById('idIssueCountry').value.trim(),
+    statisticalNumber: document.getElementById('statisticalNumber').value.trim(),
+    hasFatherId: hasFatherId.checked,
+    fatherIdType: hasFatherId.checked ? document.getElementById('fatherIdType').value : '',
+    fatherIdNumber: hasFatherId.checked ? document.getElementById('fatherIdNumber').value.trim() : '',
+    // 3. بيانات شخصية
+    gender: document.getElementById('gender').value,
+    nationality: document.getElementById('nationality').value,
+    birthCountry: document.getElementById('birthCountry').value.trim(),
+    birthPlace: document.getElementById('birthPlace').value.trim(),
+    motherTongue: document.getElementById('motherTongue').value,
+    bloodType: document.getElementById('bloodType').value,
+    religion: document.getElementById('religion').value,
+    fatherPhone: document.getElementById('fatherPhone').value.trim(),
+    notes: document.getElementById('notes').value.trim(),
+    // 4. بيانات دراسية
+    specialNeeds: document.getElementById('specialNeeds').value,
+    studyLanguage: document.getElementById('studyLanguage').value,
+    livingStandard: document.getElementById('livingStandard').value,
+    socialGrant: document.getElementById('socialGrant').value,
+    grade: document.getElementById('grade').value,
+    section: document.getElementById('section').value,
+    governorate: document.getElementById('governorate').value,
+    districtSub: document.getElementById('districtSub').value.trim(),
+    // 5. العنوان
+    city: document.getElementById('city').value.trim(),
+    district: document.getElementById('district').value.trim(),
+    mahalla: document.getElementById('mahalla').value.trim(),
+    alley: document.getElementById('alley').value.trim(),
+    addressLine1: document.getElementById('addressLine1').value.trim(),
+    addressLine2: document.getElementById('addressLine2').value.trim(),
+    landmark: document.getElementById('landmark').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    photo: photoBase64,
+    createdAt: fb.serverTimestamp()
+  };
+
+  try{
+    await fb.addDoc(fb.collection(fb.db, COLLECTION_NAME), data);
+    successMsg.style.display = 'block';
+    refNumOut.textContent = refNumber;
+    form.reset();
+    photoBase64 = "";
+    photoBox.classList.remove('has-img');
+    photoBox.innerHTML = `<div class="icon">📸</div><div class="txt">اضغط لاختيار صورة من الكاميرا أو المعرض</div>`;
+    photoBox.appendChild(photoInput);
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(err){
+    console.error(err);
+    formMsg.className = 'msg err';
+    formMsg.textContent = 'حدث خطأ أثناء الإرسال، تحقق من الاتصال بالإنترنت وحاول مرة أخرى.';
+    formMsg.style.display = 'block';
+  }finally{
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'إرسال بياناتي 🚀';
+  }
+});
+
+</script>
+</body>
+</html>
