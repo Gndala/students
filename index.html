@@ -865,7 +865,13 @@ form.addEventListener('submit', async (e) => {
   }catch(err){
     console.error(err);
     formMsg.className = 'msg err';
-    formMsg.textContent = 'حدث خطأ أثناء الإرسال، تحقق من الاتصال بالإنترنت وحاول مرة أخرى.';
+    if (err.code === 'permission-denied'){
+      formMsg.textContent = 'تعذّر الإرسال بسبب إعدادات الصلاحيات في قاعدة البيانات. الرجاء إبلاغ إدارة المدرسة بهذه المشكلة التقنية.';
+    } else if (err.code === 'unavailable' || err.code === 'deadline-exceeded'){
+      formMsg.textContent = '⚠ الاتصال بالخادم كان بطيئاً أو انقطع أثناء الإرسال. قد تكون بياناتك وصلت فعلاً رغم هذه الرسالة — تحقق من لوحة الإدارة قبل إعادة الإرسال حتى لا تتكرر بياناتك. إذا لم تكن موجودة، أعد المحاولة.';
+    } else {
+      formMsg.textContent = 'حدث خطأ أثناء الإرسال (' + (err.code || err.message || 'غير معروف') + '). تحقق من الاتصال بالإنترنت وحاول مرة أخرى.';
+    }
     formMsg.style.display = 'block';
   }finally{
     submitBtn.disabled = false;
@@ -876,3 +882,4 @@ form.addEventListener('submit', async (e) => {
 </script>
 </body>
 </html>
+
