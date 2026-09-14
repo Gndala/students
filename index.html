@@ -743,8 +743,18 @@ function esc(v){
   return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+let isSubmitting = false;
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  if (isSubmitting){
+    formMsg.className = 'msg err';
+    formMsg.textContent = 'الاستمارة قيد الإرسال بالفعل، الرجاء الانتظار ولا تضغط أكثر من مرة.';
+    formMsg.style.display = 'block';
+    return;
+  }
+
   formMsg.style.display = 'none';
   successMsg.style.display = 'none';
 
@@ -792,6 +802,7 @@ form.addEventListener('submit', async (e) => {
 
   submitBtn.disabled = true;
   submitBtn.textContent = 'جارِ الإرسال...';
+  isSubmitting = true;
 
   await fbReadyPromise;
 
@@ -874,6 +885,7 @@ form.addEventListener('submit', async (e) => {
     }
     formMsg.style.display = 'block';
   }finally{
+    isSubmitting = false;
     submitBtn.disabled = false;
     submitBtn.textContent = 'إرسال بياناتي 🚀';
   }
