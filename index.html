@@ -69,6 +69,16 @@
       radial-gradient(ellipse 600px 320px at 110% 10%, rgba(56,189,248,.45), transparent 55%),
       linear-gradient(160deg, var(--violet) 0%, var(--violet-2) 65%, #3B1370 100%);
   }
+  header.top::before{
+    content:"";
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size:32px 32px;
+    mask-image:radial-gradient(ellipse 100% 90% at 50% 0%, #000 35%, transparent 85%);
+    pointer-events:none;
+  }
   header.top::after{
     content:"";
     position:absolute;left:0;right:0;bottom:-1px;height:40px;
@@ -85,6 +95,7 @@
     padding:7px 16px;border-radius:999px;
     font-size:13px;font-weight:700;
     margin-bottom:16px;
+    box-shadow:0 4px 14px -4px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
   }
   header.top h1{
     color:#fff;
@@ -109,8 +120,9 @@
     border-radius:var(--radius);
     padding:22px 18px;
     margin-bottom:18px;
-    box-shadow:0 10px 30px -14px rgba(92,38,190,.18);
+    box-shadow:0 1px 2px rgba(92,38,190,.05), 0 6px 14px -8px rgba(92,38,190,.14), 0 20px 36px -18px rgba(92,38,190,.22);
     border:1px solid var(--border);
+    transition:box-shadow .2s;
   }
   .card-head{
     display:flex;align-items:center;gap:10px;
@@ -122,6 +134,7 @@
     font-size:17px;
     background:linear-gradient(135deg, var(--violet), var(--pink));
     color:#fff;flex-shrink:0;
+    box-shadow:0 6px 14px -6px rgba(124,58,237,.5);
   }
   .card-head h2{font-size:16.5px;margin:0;font-weight:800;}
   .section-hint{
@@ -145,11 +158,13 @@
     font-size:14.5px;
     font-family:inherit;
     color:var(--text);
-    transition:border-color .15s, box-shadow .15s;
+    transition:border-color .18s, box-shadow .18s, background .18s;
   }
+  .field input:hover, .field select:hover, .field textarea:hover{border-color:#C9BCF2;}
   .field input:focus, .field select:focus, .field textarea:focus{
     outline:none;
     border-color:var(--violet);
+    background:#fff;
     box-shadow:0 0 0 4px rgba(124,58,237,.12);
   }
   .field .hint{font-size:12px;color:var(--muted);margin-top:4px;}
@@ -164,9 +179,9 @@
     text-align:center;
     cursor:pointer;
     background:linear-gradient(180deg, #FBF9FF, #F5F0FF);
-    transition:border-color .15s, background .15s;
+    transition:border-color .18s, background .18s, transform .18s;
   }
-  .photo-box:hover{border-color:var(--violet);}
+  .photo-box:hover{border-color:var(--violet);background:linear-gradient(180deg, #F8F4FF, #F0E9FF);}
   .photo-box.has-img{padding:14px;}
   .photo-box img{
     width:96px;height:96px;object-fit:cover;
@@ -184,11 +199,35 @@
     color:#fff;border:none;border-radius:16px;
     padding:16px;font-size:16px;font-weight:800;
     cursor:pointer;
-    box-shadow:0 12px 26px -10px rgba(124,58,237,.55);
+    box-shadow:0 2px 4px rgba(124,58,237,.2), 0 12px 26px -10px rgba(124,58,237,.55), inset 0 1px 0 rgba(255,255,255,.15);
     transition:transform .12s, box-shadow .12s;
   }
-  .btn-submit:hover{transform:translateY(-1px);}
+  .btn-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 2px 4px rgba(124,58,237,.2), 0 18px 36px -10px rgba(124,58,237,.65), inset 0 1px 0 rgba(255,255,255,.15);}
   .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+  /* ---------- Live completion bar ---------- */
+  .completion-track{
+    height:7px;background:#F1EAFF;border-radius:999px;overflow:hidden;margin-bottom:4px;
+  }
+  .completion-fill{
+    height:100%;width:0%;border-radius:999px;
+    background:linear-gradient(90deg, var(--violet), var(--pink));
+    transition:width .35s ease;
+  }
+  .completion-text{
+    font-size:11.5px;color:#7A5A00;text-align:left;font-weight:700;
+  }
+  .completion-text b{color:var(--violet);}
+
+  /* ---------- Live field validation ---------- */
+  .field input.field-ok, .field select.field-ok, .field textarea.field-ok{
+    border-color:var(--ok, #16A34A) !important;
+  }
+  .field input.field-bad, .field select.field-bad, .field textarea.field-bad{
+    border-color:#DC2626 !important;
+  }
+  .field-counter{font-size:11px;color:var(--muted);margin-top:3px;text-align:left;direction:ltr;}
+  .field-counter.warn{color:#b8860b;font-weight:700;}
 
   .msg{
     border-radius:14px;padding:13px 16px;margin-bottom:16px;
@@ -232,9 +271,11 @@
   <div class="msg err" id="formMsg"></div>
 
   <div class="card" style="background:linear-gradient(135deg, #FFF7E0, #FFEFD1);border-color:#FBE3A8;">
-    <div style="font-size:13.5px;line-height:1.8;color:#7A5A00;font-weight:600;">
+    <div style="font-size:13.5px;line-height:1.8;color:#7A5A00;font-weight:600;margin-bottom:12px;">
       📝 <b>قبل ما تبدأ:</b> جاوب على كل الأسئلة اللي فيها علامة <span style="color:#F472B6;font-weight:800;">*</span> لأنها مطلوبة، والباقي اختياري. إذا انحبست بأي سؤال، اسأل أهلك أو معلمك يساعدونك. خذ وقتك، ما في عجلة 🙂
     </div>
+    <div class="completion-track"><div class="completion-fill" id="completionFill"></div></div>
+    <div class="completion-text">اكتمال الاستمارة: <b id="completionPct">0%</b></div>
   </div>
 
   <form id="studentForm" novalidate>
@@ -690,6 +731,7 @@ function updateIdTypeFields(){
   }
 }
 idType.addEventListener('change', updateIdTypeFields);
+idType.addEventListener('change', () => { if (typeof updateCompletion === 'function') updateCompletion(); });
 updateIdTypeFields();
 
 /* ---------- Father ID checkbox ---------- */
@@ -725,6 +767,7 @@ photoInput.addEventListener('change', () => {
       photoBox.classList.add('has-img');
       photoBox.innerHTML = `<img src="${photoBase64}"><div class="txt">تم اختيار الصورة (اضغط للتغيير)</div>`;
       photoBox.appendChild(photoInput);
+      if (typeof updateCompletion === 'function') updateCompletion();
     };
     img.src = e.target.result;
   };
@@ -742,6 +785,66 @@ function esc(v){
   if (v === null || v === undefined) return '';
   return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+/* ---------- Live completion percentage ---------- */
+const completionFill = document.getElementById('completionFill');
+const completionPct = document.getElementById('completionPct');
+
+function updateCompletion(){
+  const requiredNow = Array.from(form.querySelectorAll('[required]')).filter(f => {
+    // Skip fields hidden inside a .hidden wrapper (conditional ID fields not currently shown)
+    const wrap = f.closest('.hidden');
+    return !wrap;
+  });
+  if (requiredNow.length === 0) return;
+  const filled = requiredNow.filter(f => {
+    if (f.type === 'file') return !!photoBase64;
+    if (f.type === 'checkbox') return true; // optional-style checkboxes don't block completion
+    return f.value && f.value.trim() !== '';
+  }).length + (photoBase64 ? 1 : 0);
+  const total = requiredNow.length + 1; // +1 for the photo requirement
+  const pct = Math.min(100, Math.round((filled / total) * 100));
+  completionFill.style.width = pct + '%';
+  completionPct.textContent = pct + '%';
+}
+
+form.addEventListener('input', updateCompletion);
+form.addEventListener('change', updateCompletion);
+updateCompletion();
+
+/* ---------- Live field validation (visual feedback while typing) ---------- */
+function attachLiveValidation(input){
+  function check(){
+    const val = input.value.trim();
+    if (val === ''){
+      input.classList.remove('field-ok','field-bad');
+      return;
+    }
+    const isValid = input.checkValidity ? input.checkValidity() : true;
+    input.classList.toggle('field-ok', isValid);
+    input.classList.toggle('field-bad', !isValid);
+  }
+  input.addEventListener('input', check);
+  input.addEventListener('blur', check);
+}
+
+form.querySelectorAll('input[required], input[pattern], input[type="email"], select[required]').forEach(attachLiveValidation);
+
+/* ---------- Character counter for father's phone ---------- */
+(function attachPhoneCounter(){
+  const input = document.getElementById('fatherPhone');
+  if (!input) return;
+  const counter = document.createElement('div');
+  counter.className = 'field-counter';
+  input.parentElement.appendChild(counter);
+  function update(){
+    const len = input.value.trim().length;
+    counter.textContent = `${len} / 11`;
+    counter.classList.toggle('warn', len === 11);
+  }
+  input.addEventListener('input', update);
+  update();
+})();
 
 let isSubmitting = false;
 
@@ -894,4 +997,3 @@ form.addEventListener('submit', async (e) => {
 </script>
 </body>
 </html>
-
