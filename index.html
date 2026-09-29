@@ -967,6 +967,24 @@ form.addEventListener('submit', async (e) => {
   };
 
   try{
+    // Determine the student's ID number regardless of which ID type was chosen,
+    // then remove any previous submission with the same ID so only the latest one is kept.
+    const idNumberForDup = data.unifiedCardNumber || data.civilIdNumber || data.birthCertNumber || data.otherIdNumber || '';
+    if (idNumberForDup){
+      const dupFields = ['unifiedCardNumber','civilIdNumber','birthCertNumber','otherIdNumber'];
+      for (const field of dupFields){
+        try{
+          const dupQ = fb.query(fb.collection(fb.db, COLLECTION_NAME), fb.where(field, '==', idNumberForDup));
+          const dupSnap = await fb.getDocs(dupQ);
+          for (const docSnap of dupSnap.docs){
+            await fb.deleteDoc(fb.doc(fb.db, COLLECTION_NAME, docSnap.id));
+          }
+        }catch(dupErr){
+          console.error('duplicate check failed for field', field, dupErr);
+        }
+      }
+    }
+
     await fb.addDoc(fb.collection(fb.db, COLLECTION_NAME), data);
     successMsg.style.display = 'block';
     refNumOut.textContent = refNumber;
