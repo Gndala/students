@@ -337,17 +337,15 @@
     <div class="card">
       <div class="card-head"><div class="dot">🪪</div><h2>وثيقة التعريف (للطالب)</h2></div>
       <div class="section-hint">
-        💡 اختر نوع الهوية اللي عندك أنت (مو أبوك)، سواء بطاقة موحدة أو هوية أحوال مدنية أو شهادة ولادة. إذا ما عندك واحدة منها، اختر "أخرى". اطلب من أهلك مساعدتك بكتابة الرقم الصحيح.
+        💡 اختر نوع الهوية اللي عندك أنت (مو أبوك): البطاقة الوطنية الموحدة أو هوية الأحوال المدنية. اطلب من أهلك مساعدتك بكتابة الرقم الصحيح.
       </div>
 
       <div class="field">
         <label>نوع الهوية <span class="req">*</span></label>
         <select id="idType" required>
           <option value="">اختر نوع الهوية</option>
-          <option value="هوية الأحوال المدنية">هوية الأحوال المدنية</option>
           <option value="البطاقة الوطنية الموحدة">البطاقة الوطنية الموحدة</option>
-          <option value="شهادة ولادة">شهادة ولادة</option>
-          <option value="أخرى">أخرى</option>
+          <option value="هوية الأحوال المدنية">هوية الأحوال المدنية</option>
         </select>
       </div>
 
@@ -359,13 +357,9 @@
         <label>رقم هوية الأحوال المدنية <span class="req">*</span></label>
         <input type="text" id="civilIdNumber" placeholder="رقم الهوية" inputmode="numeric">
       </div>
-      <div class="field hidden" id="birthCertWrap">
-        <label>رقم شهادة الولادة <span class="req">*</span></label>
-        <input type="text" id="birthCertNumber" placeholder="رقم شهادة الولادة" inputmode="numeric">
-      </div>
-      <div class="field hidden" id="otherIdWrap">
-        <label>رقم الوثيقة <span class="req">*</span></label>
-        <input type="text" id="otherIdNumber" placeholder="رقم الوثيقة">
+      <div class="field hidden" id="civilRecordWrap">
+        <label>السجل <span class="req">*</span></label>
+        <input type="text" id="civilRecordNumber" placeholder="رقم السجل" inputmode="numeric">
       </div>
 
       <div class="row2">
@@ -699,35 +693,27 @@ let fbReadyPromise = new Promise((resolve) => {
 const idType = document.getElementById('idType');
 const unifiedCardWrap = document.getElementById('unifiedCardWrap');
 const civilIdWrap = document.getElementById('civilIdWrap');
-const birthCertWrap = document.getElementById('birthCertWrap');
-const otherIdWrap = document.getElementById('otherIdWrap');
+const civilRecordWrap = document.getElementById('civilRecordWrap');
 const unifiedCardNumber = document.getElementById('unifiedCardNumber');
 const civilIdNumber = document.getElementById('civilIdNumber');
-const birthCertNumber = document.getElementById('birthCertNumber');
-const otherIdNumber = document.getElementById('otherIdNumber');
+const civilRecordNumber = document.getElementById('civilRecordNumber');
 
 function updateIdTypeFields(){
   unifiedCardWrap.classList.add('hidden');
   civilIdWrap.classList.add('hidden');
-  birthCertWrap.classList.add('hidden');
-  otherIdWrap.classList.add('hidden');
+  civilRecordWrap.classList.add('hidden');
   unifiedCardNumber.required = false;
   civilIdNumber.required = false;
-  birthCertNumber.required = false;
-  otherIdNumber.required = false;
+  civilRecordNumber.required = false;
 
   if (idType.value === 'البطاقة الوطنية الموحدة'){
     unifiedCardWrap.classList.remove('hidden');
     unifiedCardNumber.required = true;
   } else if (idType.value === 'هوية الأحوال المدنية'){
     civilIdWrap.classList.remove('hidden');
+    civilRecordWrap.classList.remove('hidden');
     civilIdNumber.required = true;
-  } else if (idType.value === 'شهادة ولادة'){
-    birthCertWrap.classList.remove('hidden');
-    birthCertNumber.required = true;
-  } else if (idType.value === 'أخرى'){
-    otherIdWrap.classList.remove('hidden');
-    otherIdNumber.required = true;
+    civilRecordNumber.required = true;
   }
 }
 idType.addEventListener('change', updateIdTypeFields);
@@ -880,18 +866,11 @@ form.addEventListener('submit', async (e) => {
     civilIdNumber.focus();
     return;
   }
-  if (idType.value === 'شهادة ولادة' && !birthCertNumber.value.trim()){
+  if (idType.value === 'هوية الأحوال المدنية' && !civilRecordNumber.value.trim()){
     formMsg.className = 'msg err';
-    formMsg.textContent = 'الرجاء إدخال رقم شهادة الولادة.';
+    formMsg.textContent = 'الرجاء إدخال رقم السجل.';
     formMsg.style.display = 'block';
-    birthCertNumber.focus();
-    return;
-  }
-  if (idType.value === 'أخرى' && !otherIdNumber.value.trim()){
-    formMsg.className = 'msg err';
-    formMsg.textContent = 'الرجاء إدخال رقم الوثيقة.';
-    formMsg.style.display = 'block';
-    otherIdNumber.focus();
+    civilRecordNumber.focus();
     return;
   }
 
@@ -927,8 +906,7 @@ form.addEventListener('submit', async (e) => {
     idType: idType.value,
     unifiedCardNumber: unifiedCardNumber.value.trim(),
     civilIdNumber: civilIdNumber.value.trim(),
-    birthCertNumber: birthCertNumber.value.trim(),
-    otherIdNumber: otherIdNumber.value.trim(),
+    civilRecordNumber: civilRecordNumber.value.trim(),
     idIssueCountry: document.getElementById('idIssueCountry').value.trim(),
     statisticalNumber: document.getElementById('statisticalNumber').value.trim(),
     hasFatherId: hasFatherId.checked,
@@ -967,24 +945,7 @@ form.addEventListener('submit', async (e) => {
   };
 
   try{
-    // Determine the student's ID number regardless of which ID type was chosen,
-    // then remove any previous submission with the same ID so only the latest one is kept.
-    const idNumberForDup = data.unifiedCardNumber || data.civilIdNumber || data.birthCertNumber || data.otherIdNumber || '';
-    if (idNumberForDup){
-      const dupFields = ['unifiedCardNumber','civilIdNumber','birthCertNumber','otherIdNumber'];
-      for (const field of dupFields){
-        try{
-          const dupQ = fb.query(fb.collection(fb.db, COLLECTION_NAME), fb.where(field, '==', idNumberForDup));
-          const dupSnap = await fb.getDocs(dupQ);
-          for (const docSnap of dupSnap.docs){
-            await fb.deleteDoc(fb.doc(fb.db, COLLECTION_NAME, docSnap.id));
-          }
-        }catch(dupErr){
-          console.error('duplicate check failed for field', field, dupErr);
-        }
-      }
-    }
-
+    // لا يتم حذف أي سجل سابق: كل إرسال يُحفظ كسجل جديد، والتكرار يُعالَج من لوحة الإدارة.
     await fb.addDoc(fb.collection(fb.db, COLLECTION_NAME), data);
     successMsg.style.display = 'block';
     refNumOut.textContent = refNumber;
