@@ -10,7 +10,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where
+    getFirestore, collection, addDoc, setDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -25,7 +25,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  window.__fb = { db, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where };
+  window.__fb = { db, collection, addDoc, setDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where };
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
 
@@ -888,7 +888,8 @@ form.addEventListener('submit', async (e) => {
 
   await fbReadyPromise;
 
-  const refNumber = 'STU-' + Date.now().toString().slice(-8);
+  // رقم مرجعي فريد (وقت كامل + جزء عشوائي) يُستخدم أيضاً كمعرّف للمستند، فلا يتصادم مع غيره
+  const refNumber = 'STU-' + Date.now().toString().slice(-8) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
 
   const data = {
     referenceNumber: refNumber,
@@ -946,7 +947,24 @@ form.addEventListener('submit', async (e) => {
 
   try{
     // لا يتم حذف أي سجل سابق: كل إرسال يُحفظ كسجل جديد، والتكرار يُعالَج من لوحة الإدارة.
-    await fb.addDoc(fb.collection(fb.db, COLLECTION_NAME), data);
+    // نسخة مؤقتة على جهاز الطالب حتى يتأكد وصول البيانات
+    try{ localStorage.setItem('pendingStudent', JSON.stringify({ id: refNumber, data: { ...data, createdAt: null } })); }catch(_){}
+    // إعادة المحاولة تلقائياً (حتى 4 مرات) بنفس المعرّف، فلا يضيع طالب ولا يتكرر سجله
+    let lastErr = null, saved = false;
+    for (let attempt = 1; attempt <= 4 && !saved; attempt++){
+      try{
+        await fb.setDoc(fb.doc(fb.db, COLLECTION_NAME, refNumber), data);
+        saved = true;
+      }catch(e){
+        lastErr = e;
+        // إذا نجحت محاولة سابقة فعلياً ثم رُفضت إعادة الكتابة، فالسجل موجود بالفعل
+        if (attempt > 1 && e.code === 'permission-denied'){ saved = true; break; }
+        if (e.code === 'permission-denied' || e.code === 'invalid-argument') break;
+        await new Promise(r => setTimeout(r, 1000 * attempt));
+      }
+    }
+    if (!saved) throw lastErr;
+    try{ localStorage.removeItem('pendingStudent'); }catch(_){}
     successMsg.style.display = 'block';
     refNumOut.textContent = refNumber;
     form.reset();
@@ -961,7 +979,7 @@ form.addEventListener('submit', async (e) => {
     if (err.code === 'permission-denied'){
       formMsg.textContent = 'تعذّر الإرسال بسبب إعدادات الصلاحيات في قاعدة البيانات. الرجاء إبلاغ إدارة المدرسة بهذه المشكلة التقنية.';
     } else if (err.code === 'unavailable' || err.code === 'deadline-exceeded'){
-      formMsg.textContent = '⚠ الاتصال بالخادم كان بطيئاً أو انقطع أثناء الإرسال. قد تكون بياناتك وصلت فعلاً رغم هذه الرسالة — تحقق من لوحة الإدارة قبل إعادة الإرسال حتى لا تتكرر بياناتك. إذا لم تكن موجودة، أعد المحاولة.';
+      formMsg.textContent = '⚠ الاتصال بالخادم كان بطيئاً أو انقطع أثناء الإرسال. جرّب الإرسال مرة أخرى بعد قليل، ولا تغلق الصفحة.';
     } else {
       formMsg.textContent = 'حدث خطأ أثناء الإرسال (' + (err.code || err.message || 'غير معروف') + '). تحقق من الاتصال بالإنترنت وحاول مرة أخرى.';
     }
