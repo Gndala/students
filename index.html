@@ -192,6 +192,21 @@
   .photo-box .txt{font-size:13.5px;color:var(--muted);font-weight:700;}
   .photo-box input{display:none;}
 
+  /* ---------- Face camera (KYC style) ---------- */
+  #camModal{position:fixed;inset:0;z-index:9999;background:#000;display:none;flex-direction:column;}
+  #camModal.open{display:flex;}
+  #camStage{position:relative;flex:1;overflow:hidden;background:#000;}
+  #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+  #camPreview{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none;}
+  #camFrame{position:absolute;border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,.62);transition:border-color .2s;pointer-events:none;}
+  #camFrame.ok{border-color:#2ecc71;}
+  #camHint{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 14px);text-align:center;color:#fff;font-weight:800;font-size:15px;padding:0 16px;text-shadow:0 1px 6px rgba(0,0,0,.7);}
+  #camBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px calc(env(safe-area-inset-bottom, 0px) + 18px);background:#000;}
+  #camBar button{border:0;cursor:pointer;font-family:inherit;font-weight:800;}
+  .cam-side{background:rgba(255,255,255,.15);color:#fff;border-radius:14px;padding:12px 16px;font-size:14px;min-width:84px;}
+  #camShot{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.45) !important;box-shadow:0 0 0 3px #fff inset;}
+  #camOk{background:#2ecc71;color:#fff;border-radius:14px;padding:12px 18px;font-size:15px;display:none;}
+
   /* ---------- Buttons ---------- */
   .btn-submit{
     width:100%;
@@ -247,6 +262,21 @@
 </style>
 </head>
 <body>
+<div id="camModal" role="dialog" aria-modal="true">
+  <div id="camStage">
+    <video id="camVideo" autoplay playsinline muted></video>
+    <img id="camPreview" alt="">
+    <div id="camFrame"></div>
+    <div id="camHint">ضع وجهك داخل الإطار</div>
+  </div>
+  <div id="camBar">
+    <button type="button" class="cam-side" id="camCancel">إغلاق</button>
+    <button type="button" id="camShot" aria-label="التقاط"></button>
+    <button type="button" class="cam-side" id="camSwitch">قلب الكاميرا</button>
+    <button type="button" id="camOk">اعتماد ✓</button>
+  </div>
+</div>
+
 
 <div id="updateBanner">✅ تم تحديث الموقع بواسطة علي محمد دينار</div>
 <script>
@@ -343,23 +373,13 @@
       <div class="field">
         <label>نوع الهوية <span class="req">*</span></label>
         <select id="idType" required>
-          <option value="">اختر نوع الهوية</option>
-          <option value="البطاقة الوطنية الموحدة">البطاقة الوطنية الموحدة</option>
-          <option value="هوية الأحوال المدنية">هوية الأحوال المدنية</option>
+          <option value="البطاقة الوطنية الموحدة" selected>البطاقة الوطنية الموحدة</option>
         </select>
       </div>
 
       <div class="field hidden" id="unifiedCardWrap">
         <label>رقم البطاقة الوطنية الموحدة <span class="req">*</span></label>
         <input type="text" id="unifiedCardNumber" placeholder="رقم البطاقة الموحدة" inputmode="numeric">
-      </div>
-      <div class="field hidden" id="civilIdWrap">
-        <label>رقم هوية الأحوال المدنية <span class="req">*</span></label>
-        <input type="text" id="civilIdNumber" placeholder="رقم الهوية" inputmode="numeric">
-      </div>
-      <div class="field hidden" id="civilRecordWrap">
-        <label>السجل <span class="req">*</span></label>
-        <input type="text" id="civilRecordNumber" placeholder="رقم السجل" inputmode="numeric">
       </div>
 
       <div class="row2">
@@ -401,14 +421,14 @@
     <div class="card">
       <div class="card-head"><div class="dot">📷</div><h2>الصورة الشخصية</h2></div>
       <div class="section-hint">
-        💡 حط صورة واضحة لوجهك بس (بدون نظارة شمس أو قبعة)، إما تلتقطها بالكاميرا الحين أو تختار وحدة موجودة عندك بالجوال.
+        💡 اضغط على المربع وتفتح الكاميرا، وجّهها على وجهك داخل الإطار (بدون نظارة شمس أو قبعة) وتنلتقط صورة للوجه فقط.
       </div>
       <div class="field">
         <div class="photo-box" id="photoBox">
           <input type="file" id="photoInput" accept="image/*">
           <div id="photoPlaceholder">
             <div class="icon">📸</div>
-            <div class="txt">اضغط لاختيار صورة من الكاميرا أو المعرض</div>
+            <div class="txt">اضغط لفتح الكاميرا والتقاط صورة الوجه</div>
           </div>
         </div>
       </div>
@@ -637,7 +657,51 @@
         </div>
         <div class="field">
           <label>الحي <span class="req">*</span></label>
-          <input type="text" id="district" required placeholder="اسم الحي">
+          <select id="district" required>
+            <option value="">اختر الحي</option>
+            <option value="الهدامة">الهدامة</option>
+            <option value="المجمع الكويتي">المجمع الكويتي</option>
+            <option value="الصناعة">الصناعة</option>
+            <option value="الهندية الشمالية">الهندية الشمالية</option>
+            <option value="حي المعلمين">حي المعلمين</option>
+            <option value="حي الجاهزة">حي الجاهزة</option>
+            <option value="دور الخمسين">دور الخمسين</option>
+            <option value="دور المشروع">دور المشروع</option>
+            <option value="القاعدة">القاعدة</option>
+            <option value="دور الشعبي">دور الشعبي</option>
+            <option value="دور السمنت صناعه">دور السمنت صناعه</option>
+            <option value="دور السمنت الجاهزه">دور السمنت الجاهزه</option>
+            <option value="دور الهندسة">دور الهندسة</option>
+            <option value="دور الفاروق">دور الفاروق</option>
+            <option value="دور الموانئ">دور الموانئ</option>
+            <option value="القطع مقابيل المشروع">القطع مقابيل المشروع</option>
+            <option value="الطلايع">الطلايع</option>
+            <option value="دور السمنت الهندية الجنوبية">دور السمنت الهندية الجنوبية</option>
+            <option value="شارع ١">شارع ١</option>
+            <option value="شارع ٢">شارع ٢</option>
+            <option value="شارع ٣">شارع ٣</option>
+            <option value="شارع ٤">شارع ٤</option>
+            <option value="شارع ٥">شارع ٥</option>
+            <option value="شارع ٦">شارع ٦</option>
+            <option value="شارع ٧">شارع ٧</option>
+            <option value="شارع ٨">شارع ٨</option>
+            <option value="شارع ٩">شارع ٩</option>
+            <option value="شارع ١٠">شارع ١٠</option>
+            <option value="شارع ١١">شارع ١١</option>
+            <option value="شارع ١٢">شارع ١٢</option>
+            <option value="شارع ١٣">شارع ١٣</option>
+            <option value="شارع ١٤">شارع ١٤</option>
+            <option value="شارع ١٥">شارع ١٥</option>
+            <option value="شارع ١٦">شارع ١٦</option>
+            <option value="شارع ١٧">شارع ١٧</option>
+            <option value="شارع ١٨">شارع ١٨</option>
+            <option value="شارع ١٩">شارع ١٩</option>
+            <option value="شارع ٢٠">شارع ٢٠</option>
+            <option value="شارع ٢١">شارع ٢١</option>
+            <option value="شارع ٢٢">شارع ٢٢</option>
+            <option value="شارع ٢٣">شارع ٢٣</option>
+            <option value="شارع ٢٤">شارع ٢٤</option>
+          </select>
         </div>
       </div>
 
@@ -692,28 +756,15 @@ let fbReadyPromise = new Promise((resolve) => {
 /* ---------- Conditional ID type fields ---------- */
 const idType = document.getElementById('idType');
 const unifiedCardWrap = document.getElementById('unifiedCardWrap');
-const civilIdWrap = document.getElementById('civilIdWrap');
-const civilRecordWrap = document.getElementById('civilRecordWrap');
 const unifiedCardNumber = document.getElementById('unifiedCardNumber');
-const civilIdNumber = document.getElementById('civilIdNumber');
-const civilRecordNumber = document.getElementById('civilRecordNumber');
 
 function updateIdTypeFields(){
   unifiedCardWrap.classList.add('hidden');
-  civilIdWrap.classList.add('hidden');
-  civilRecordWrap.classList.add('hidden');
   unifiedCardNumber.required = false;
-  civilIdNumber.required = false;
-  civilRecordNumber.required = false;
 
   if (idType.value === 'البطاقة الوطنية الموحدة'){
     unifiedCardWrap.classList.remove('hidden');
     unifiedCardNumber.required = true;
-  } else if (idType.value === 'هوية الأحوال المدنية'){
-    civilIdWrap.classList.remove('hidden');
-    civilRecordWrap.classList.remove('hidden');
-    civilIdNumber.required = true;
-    civilRecordNumber.required = true;
   }
 }
 idType.addEventListener('change', updateIdTypeFields);
@@ -733,7 +784,151 @@ const photoInput = document.getElementById('photoInput');
 const photoPlaceholder = document.getElementById('photoPlaceholder');
 let photoBase64 = "";
 
-photoBox.addEventListener('click', () => photoInput.click());
+function setPhoto(dataUrl){
+  photoBase64 = dataUrl;
+  photoBox.classList.add('has-img');
+  photoBox.innerHTML = `<img src="${photoBase64}"><div class="txt">تم التقاط الصورة (اضغط لإعادة الالتقاط)</div>`;
+  photoBox.appendChild(photoInput);
+  if (typeof updateCompletion === 'function') updateCompletion();
+}
+
+/* ---------- Face camera (KYC style) ---------- */
+const camModal = document.getElementById('camModal');
+const camStage = document.getElementById('camStage');
+const camVideo = document.getElementById('camVideo');
+const camPreview = document.getElementById('camPreview');
+const camFrame = document.getElementById('camFrame');
+const camHint = document.getElementById('camHint');
+const camShot = document.getElementById('camShot');
+const camOk = document.getElementById('camOk');
+const camSwitch = document.getElementById('camSwitch');
+const camCancel = document.getElementById('camCancel');
+let camStream = null, camFacing = 'user', camTimer = null, camShotData = '';
+let faceDetector = null;
+try{ if ('FaceDetector' in window) faceDetector = new FaceDetector({ fastMode:true, maxDetectedFaces:1 }); }catch(_){ faceDetector = null; }
+
+function layoutFrame(){
+  const cw = camStage.clientWidth, ch = camStage.clientHeight;
+  let fh = Math.min(ch * 0.62, cw * 0.8 * 1.25);
+  let fw = fh * 0.8;
+  if (fw > cw * 0.8){ fw = cw * 0.8; fh = fw / 0.8; }
+  const cy = ch * 0.48;
+  camFrame.style.width = fw + 'px';
+  camFrame.style.height = fh + 'px';
+  camFrame.style.left = ((cw - fw) / 2) + 'px';
+  camFrame.style.top = (cy - fh / 2) + 'px';
+  return { cw, ch, fx:(cw - fw) / 2, fy:cy - fh / 2, fw, fh };
+}
+
+function stopCamera(){
+  if (camTimer){ clearInterval(camTimer); camTimer = null; }
+  if (camStream){ camStream.getTracks().forEach(tr => tr.stop()); camStream = null; }
+  camVideo.srcObject = null;
+}
+
+function closeCamera(){
+  stopCamera();
+  camModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// تحويل إطار الشاشة إلى إحداثيات الفيديو (object-fit: cover) وقص الوجه فقط
+function captureFace(){
+  const vw = camVideo.videoWidth, vh = camVideo.videoHeight;
+  if (!vw || !vh) return '';
+  const { cw, ch, fx, fy, fw, fh } = layoutFrame();
+  const scale = Math.max(cw / vw, ch / vh);
+  const ox = (cw - vw * scale) / 2, oy = (ch - vh * scale) / 2;
+  let sx = (fx - ox) / scale, sy = (fy - oy) / scale, sw = fw / scale, sh = fh / scale;
+  if (camFacing === 'user') sx = vw - sx - sw; // الفيديو معكوس في المعاينة فقط
+  sx = Math.max(0, sx); sy = Math.max(0, sy);
+  sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
+  const outW = Math.min(480, Math.round(sw)), outH = Math.round(outW * sh / sw);
+  const c = document.createElement('canvas');
+  c.width = outW; c.height = outH;
+  c.getContext('2d').drawImage(camVideo, sx, sy, sw, sh, 0, 0, outW, outH);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+
+async function startCamera(){
+  stopCamera();
+  camStream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: camFacing, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false
+  });
+  camVideo.style.transform = camFacing === 'user' ? 'scaleX(-1)' : 'none';
+  camVideo.srcObject = camStream;
+  await camVideo.play().catch(() => {});
+  layoutFrame();
+  if (faceDetector){
+    camTimer = setInterval(async () => {
+      try{
+        const faces = await faceDetector.detect(camVideo);
+        const ok = faces.length === 1;
+        camFrame.classList.toggle('ok', ok);
+        camHint.textContent = ok ? 'ممتاز، اضغط للالتقاط' : 'ضع وجهك داخل الإطار';
+      }catch(_){ clearInterval(camTimer); camTimer = null; }
+    }, 400);
+  }
+}
+
+function showLive(){
+  camShotData = '';
+  camPreview.style.display = 'none';
+  camVideo.style.display = 'block';
+  camFrame.style.display = 'block';
+  camShot.style.display = 'block';
+  camSwitch.style.display = 'block';
+  camOk.style.display = 'none';
+  camCancel.textContent = 'إغلاق';
+  camHint.textContent = 'ضع وجهك داخل الإطار';
+}
+
+async function openCamera(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('الكاميرا غير متاحة في هذا المتصفح، اختر صورة من الجهاز.');
+    photoInput.click();
+    return;
+  }
+  camModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  showLive();
+  try{
+    await startCamera();
+  }catch(err){
+    closeCamera();
+    alert('تعذّر فتح الكاميرا. اسمح للموقع باستخدام الكاميرا من إعدادات المتصفح، أو اختر صورة من الجهاز.');
+    photoInput.click();
+  }
+}
+
+camShot.addEventListener('click', () => {
+  const data = captureFace();
+  if (!data) return;
+  camShotData = data;
+  stopCamera();
+  camPreview.src = data;
+  camPreview.style.display = 'block';
+  camVideo.style.display = 'none';
+  camFrame.style.display = 'none';
+  camShot.style.display = 'none';
+  camSwitch.style.display = 'none';
+  camOk.style.display = 'block';
+  camCancel.textContent = 'إعادة';
+  camHint.textContent = 'تأكد أن الوجه واضح داخل الصورة';
+});
+camOk.addEventListener('click', () => { if (camShotData) setPhoto(camShotData); closeCamera(); });
+camCancel.addEventListener('click', async () => {
+  if (camShotData){ showLive(); try{ await startCamera(); }catch(_){ closeCamera(); } }
+  else closeCamera();
+});
+camSwitch.addEventListener('click', async () => {
+  camFacing = camFacing === 'user' ? 'environment' : 'user';
+  try{ await startCamera(); }catch(_){ camFacing = 'user'; try{ await startCamera(); }catch(__){} }
+});
+window.addEventListener('resize', () => { if (camModal.classList.contains('open')) layoutFrame(); });
+
+photoInput.addEventListener('click', (e) => e.stopPropagation());
+photoBox.addEventListener('click', () => openCamera());
 
 photoInput.addEventListener('change', () => {
   const file = photoInput.files[0];
@@ -859,18 +1054,11 @@ form.addEventListener('submit', async (e) => {
     unifiedCardNumber.focus();
     return;
   }
-  if (idType.value === 'هوية الأحوال المدنية' && !civilIdNumber.value.trim()){
+  if (!document.getElementById('district').value){
     formMsg.className = 'msg err';
-    formMsg.textContent = 'الرجاء إدخال رقم هوية الأحوال المدنية.';
+    formMsg.textContent = 'الرجاء اختيار الحي من القائمة.';
     formMsg.style.display = 'block';
-    civilIdNumber.focus();
-    return;
-  }
-  if (idType.value === 'هوية الأحوال المدنية' && !civilRecordNumber.value.trim()){
-    formMsg.className = 'msg err';
-    formMsg.textContent = 'الرجاء إدخال رقم السجل.';
-    formMsg.style.display = 'block';
-    civilRecordNumber.focus();
+    document.getElementById('district').focus();
     return;
   }
 
@@ -906,8 +1094,6 @@ form.addEventListener('submit', async (e) => {
     // 2. وثيقة التعريف
     idType: idType.value,
     unifiedCardNumber: unifiedCardNumber.value.trim(),
-    civilIdNumber: civilIdNumber.value.trim(),
-    civilRecordNumber: civilRecordNumber.value.trim(),
     idIssueCountry: document.getElementById('idIssueCountry').value.trim(),
     statisticalNumber: document.getElementById('statisticalNumber').value.trim(),
     hasFatherId: hasFatherId.checked,
@@ -970,7 +1156,7 @@ form.addEventListener('submit', async (e) => {
     form.reset();
     photoBase64 = "";
     photoBox.classList.remove('has-img');
-    photoBox.innerHTML = `<div class="icon">📸</div><div class="txt">اضغط لاختيار صورة من الكاميرا أو المعرض</div>`;
+    photoBox.innerHTML = `<div class="icon">📸</div><div class="txt">اضغط لفتح الكاميرا والتقاط صورة الوجه</div>`;
     photoBox.appendChild(photoInput);
     window.scrollTo({top:0, behavior:'smooth'});
   }catch(err){
