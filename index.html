@@ -10,7 +10,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, setDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where
+    getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -25,7 +25,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  window.__fb = { db, collection, addDoc, setDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where };
+  window.__fb = { db, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, serverTimestamp, query, orderBy, where };
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
 
@@ -192,21 +192,6 @@
   .photo-box .txt{font-size:13.5px;color:var(--muted);font-weight:700;}
   .photo-box input{display:none;}
 
-  /* ---------- Face camera (KYC style) ---------- */
-  #camModal{position:fixed;inset:0;z-index:9999;background:#000;display:none;flex-direction:column;}
-  #camModal.open{display:flex;}
-  #camStage{position:relative;flex:1;overflow:hidden;background:#000;}
-  #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
-  #camPreview{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:none;}
-  #camFrame{position:absolute;border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 9999px rgba(0,0,0,.62);transition:border-color .2s;pointer-events:none;}
-  #camFrame.ok{border-color:#2ecc71;}
-  #camHint{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 14px);text-align:center;color:#fff;font-weight:800;font-size:15px;padding:0 16px;text-shadow:0 1px 6px rgba(0,0,0,.7);}
-  #camBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px calc(env(safe-area-inset-bottom, 0px) + 18px);background:#000;}
-  #camBar button{border:0;cursor:pointer;font-family:inherit;font-weight:800;}
-  .cam-side{background:rgba(255,255,255,.15);color:#fff;border-radius:14px;padding:12px 16px;font-size:14px;min-width:84px;}
-  #camShot{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.45) !important;box-shadow:0 0 0 3px #fff inset;}
-  #camOk{background:#2ecc71;color:#fff;border-radius:14px;padding:12px 18px;font-size:15px;display:none;}
-
   /* ---------- Buttons ---------- */
   .btn-submit{
     width:100%;
@@ -259,24 +244,68 @@
   footer .designer span{
     color:var(--violet-2);font-weight:800;
   }
+  /* ---------- Registration deadline notice (animated, transform/opacity only for light performance) ---------- */
+  .notice-banner{
+    position:relative; overflow:hidden;
+    display:flex; align-items:center; gap:14px;
+    padding:20px 18px;
+    background:linear-gradient(135deg, #991b1b 0%, #dc2626 55%, #f59e0b 100%);
+    color:#fff;
+    box-shadow:0 10px 26px -10px rgba(185,28,28,.7);
+  }
+  .notice-banner::before{
+    content:""; position:absolute; top:0; bottom:0; width:40%; left:-50%;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
+    animation:noticeSweep 3.2s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .notice-banner::after{
+    content:""; position:absolute; inset:0; border:3px solid #fde68a;
+    animation:noticePulse 1.6s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .notice-icon{
+    font-size:44px; flex-shrink:0; line-height:1;
+    animation:noticeRing 1.8s ease-in-out infinite; transform-origin:50% 12%;
+    position:relative; z-index:1;
+  }
+  .notice-body{ position:relative; z-index:1; flex:1; min-width:0; }
+  .notice-title{ font-size:22px; font-weight:900; margin-bottom:6px; text-shadow:0 2px 8px rgba(0,0,0,.25); }
+  .notice-text{ font-size:16px; font-weight:700; line-height:1.8; }
+  .notice-date{
+    display:inline-block; background:#fde68a; color:#7f1d1d;
+    padding:1px 10px; border-radius:8px; font-weight:900; font-size:17px;
+  }
+  .notice-warn{ margin-top:4px; font-size:15px; font-weight:800; line-height:1.8; color:#fff7ed; }
+  .notice-countdown{
+    display:inline-block; margin-top:10px;
+    background:#fff; color:#b91c1c; font-weight:900; font-size:15px;
+    padding:6px 16px; border-radius:999px;
+    animation:noticeBeat 1.2s ease-in-out infinite;
+  }
+  .notice-countdown.closed{ background:#111827; color:#fff; animation:none; }
+  @keyframes noticeSweep{ from{ transform:translateX(0); } to{ transform:translateX(420%); } }
+  @keyframes noticePulse{ 0%,100%{ opacity:.15; } 50%{ opacity:.9; } }
+  @keyframes noticeRing{
+    0%,100%{ transform:rotate(0); }
+    10%{ transform:rotate(16deg); } 20%{ transform:rotate(-14deg); }
+    30%{ transform:rotate(10deg); } 40%{ transform:rotate(-8deg); }
+    50%{ transform:rotate(0); }
+  }
+  @keyframes noticeBeat{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.07); } }
+  @media (max-width:520px){
+    .notice-banner{ padding:16px 12px; gap:10px; }
+    .notice-icon{ font-size:34px; }
+    .notice-title{ font-size:19px; }
+    .notice-text{ font-size:14.5px; }
+    .notice-warn{ font-size:13.5px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .notice-banner::before, .notice-banner::after, .notice-icon, .notice-countdown{ animation:none; }
+  }
 </style>
 </head>
 <body>
-<div id="camModal" role="dialog" aria-modal="true">
-  <div id="camStage">
-    <video id="camVideo" autoplay playsinline muted></video>
-    <img id="camPreview" alt="">
-    <div id="camFrame"></div>
-    <div id="camHint">ضع وجهك داخل الإطار</div>
-  </div>
-  <div id="camBar">
-    <button type="button" class="cam-side" id="camCancel">إغلاق</button>
-    <button type="button" id="camShot" aria-label="التقاط"></button>
-    <button type="button" class="cam-side" id="camSwitch">قلب الكاميرا</button>
-    <button type="button" id="camOk">اعتماد ✓</button>
-  </div>
-</div>
-
 
 <div id="updateBanner">✅ تم تحديث الموقع بواسطة علي محمد دينار</div>
 <script>
@@ -286,6 +315,16 @@
     setTimeout(() => b.classList.remove('show'), 4000);
   });
 </script>
+
+<div class="notice-banner" role="alert">
+  <div class="notice-icon">📢</div>
+  <div class="notice-body">
+    <div class="notice-title">إعلان مهم لجميع الطلاب</div>
+    <div class="notice-text">على <b>جميع الطلاب</b> التسجيل في هذه الاستمارة، وآخر موعد للتسجيل <span class="notice-date">يوم 25/11/2026</span></div>
+    <div class="notice-warn">وبعد الإغلاق يتحمّل الطالب كافة المسؤولية الموجّهة إليه من قِبل التربية.</div>
+    <div class="notice-countdown" id="noticeCountdown"></div>
+  </div>
+</div>
 
 <header class="top">
   <div class="hero-inner">
@@ -367,19 +406,12 @@
     <div class="card">
       <div class="card-head"><div class="dot">🪪</div><h2>وثيقة التعريف (للطالب)</h2></div>
       <div class="section-hint">
-        💡 اختر نوع الهوية اللي عندك أنت (مو أبوك): البطاقة الوطنية الموحدة أو هوية الأحوال المدنية. اطلب من أهلك مساعدتك بكتابة الرقم الصحيح.
+        💡 اكتب رقم البطاقة الوطنية الموحدة الخاصة بك أنت (مو أبوك). اطلب من أهلك مساعدتك بكتابة الرقم الصحيح.
       </div>
 
-      <div class="field">
-        <label>نوع الهوية <span class="req">*</span></label>
-        <select id="idType" required>
-          <option value="البطاقة الوطنية الموحدة" selected>البطاقة الوطنية الموحدة</option>
-        </select>
-      </div>
-
-      <div class="field hidden" id="unifiedCardWrap">
+      <div class="field" id="unifiedCardWrap">
         <label>رقم البطاقة الوطنية الموحدة <span class="req">*</span></label>
-        <input type="text" id="unifiedCardNumber" placeholder="رقم البطاقة الموحدة" inputmode="numeric">
+        <input type="text" id="unifiedCardNumber" required placeholder="رقم البطاقة الموحدة" inputmode="numeric">
       </div>
 
       <div class="row2">
@@ -421,14 +453,14 @@
     <div class="card">
       <div class="card-head"><div class="dot">📷</div><h2>الصورة الشخصية</h2></div>
       <div class="section-hint">
-        💡 اضغط على المربع وتفتح الكاميرا، وجّهها على وجهك داخل الإطار (بدون نظارة شمس أو قبعة) وتنلتقط صورة للوجه فقط.
+        💡 حط صورة واضحة لوجهك بس (بدون نظارة شمس أو قبعة)، إما تلتقطها بالكاميرا الحين أو تختار وحدة موجودة عندك بالجوال.
       </div>
       <div class="field">
         <div class="photo-box" id="photoBox">
           <input type="file" id="photoInput" accept="image/*">
           <div id="photoPlaceholder">
             <div class="icon">📸</div>
-            <div class="txt">اضغط لفتح الكاميرا والتقاط صورة الوجه</div>
+            <div class="txt">اضغط لاختيار صورة من الكاميرا أو المعرض</div>
           </div>
         </div>
       </div>
@@ -473,8 +505,8 @@
           <input type="text" id="birthCountry" placeholder="اختياري">
         </div>
         <div class="field">
-          <label>مسقط الرأس</label>
-          <input type="text" id="birthPlace" placeholder="اختياري">
+          <label>مسقط الرأس <span class="req">*</span></label>
+          <input type="text" id="birthPlace" required placeholder="مثال: الزبير">
         </div>
       </div>
 
@@ -599,8 +631,8 @@
           </select>
         </div>
         <div class="field">
-          <label>الشعبة</label>
-          <select id="section">
+          <label>الشعبة <span class="req">*</span></label>
+          <select id="section" required>
             <option value="">اختر</option>
             <option value="أ">أ</option>
             <option value="ب">ب</option>
@@ -657,65 +689,20 @@
         </div>
         <div class="field">
           <label>الحي <span class="req">*</span></label>
-          <select id="district" required>
-            <option value="">اختر الحي</option>
-            <option value="الهدامة">الهدامة</option>
-            <option value="المجمع الكويتي">المجمع الكويتي</option>
-            <option value="الصناعة">الصناعة</option>
-            <option value="الهندية الشمالية">الهندية الشمالية</option>
-            <option value="حي المعلمين">حي المعلمين</option>
-            <option value="حي الجاهزة">حي الجاهزة</option>
-            <option value="دور الخمسين">دور الخمسين</option>
-            <option value="دور المشروع">دور المشروع</option>
-            <option value="القاعدة">القاعدة</option>
-            <option value="دور الشعبي">دور الشعبي</option>
-            <option value="دور السمنت صناعه">دور السمنت صناعه</option>
-            <option value="دور السمنت الجاهزه">دور السمنت الجاهزه</option>
-            <option value="دور الهندسة">دور الهندسة</option>
-            <option value="دور الفاروق">دور الفاروق</option>
-            <option value="دور الموانئ">دور الموانئ</option>
-            <option value="دور الموانئ الثاني">دور الموانئ الثاني</option>
-            <option value="حي فلسطين">حي فلسطين</option>
-            <option value="حي الضباط">حي الضباط</option>
-            <option value="القطع مقابيل المشروع">القطع مقابيل المشروع</option>
-            <option value="الطلايع">الطلايع</option>
-            <option value="دور السمنت الهندية الجنوبية">دور السمنت الهندية الجنوبية</option>
-            <option value="شارع ١">شارع ١</option>
-            <option value="شارع ٢">شارع ٢</option>
-            <option value="شارع ٣">شارع ٣</option>
-            <option value="شارع ٤">شارع ٤</option>
-            <option value="شارع ٥">شارع ٥</option>
-            <option value="شارع ٦">شارع ٦</option>
-            <option value="شارع ٧">شارع ٧</option>
-            <option value="شارع ٨">شارع ٨</option>
-            <option value="شارع ٩">شارع ٩</option>
-            <option value="شارع ١٠">شارع ١٠</option>
-            <option value="شارع ١١">شارع ١١</option>
-            <option value="شارع ١٢">شارع ١٢</option>
-            <option value="شارع ١٣">شارع ١٣</option>
-            <option value="شارع ١٤">شارع ١٤</option>
-            <option value="شارع ١٥">شارع ١٥</option>
-            <option value="شارع ١٦">شارع ١٦</option>
-            <option value="شارع ١٧">شارع ١٧</option>
-            <option value="شارع ١٨">شارع ١٨</option>
-            <option value="شارع ١٩">شارع ١٩</option>
-            <option value="شارع ٢٠">شارع ٢٠</option>
-            <option value="شارع ٢١">شارع ٢١</option>
-            <option value="شارع ٢٢">شارع ٢٢</option>
-            <option value="شارع ٢٣">شارع ٢٣</option>
-            <option value="شارع ٢٤">شارع ٢٤</option>
-          </select>
+          <input type="text" id="district" required placeholder="اسم الحي">
         </div>
       </div>
 
       <div class="row2">
         <div class="field">
           <label>المحلة <span class="req">*</span></label>
-          <input type="text" id="mahalla" required placeholder="رقم أو اسم المحلة">
+          <input type="text" id="mahalla" required placeholder="رقم الشارع">
+          <div class="hint">💡 المحلة يعني <b>رقم الشارع</b></div>
         </div>
         <div class="field">
-          <label>زقاق</label>
-          <input type="text" id="alley" placeholder="اختياري">
+          <label>الزقاق</label>
+          <input type="text" id="alley" placeholder="رقم الدار">
+          <div class="hint">💡 الزقاق يعني <b>رقم الدار</b></div>
         </div>
       </div>
 
@@ -729,7 +716,8 @@
       </div>
       <div class="field">
         <label>أقرب نقطة دالة <span class="req">*</span></label>
-        <input type="text" id="landmark" required placeholder="مثال: قرب جامع / مدرسة معروفة">
+        <input type="text" id="landmark" required placeholder="مثال: قرب مستشفى الزبير / سوق الزبير / جامع الإمام علي">
+        <div class="hint">💡 أقرب نقطة دالة يعني <b>دائرة حكومية أو مستشفى أو مدرسة أو سوق أو جامع</b> وغيرها من الدوائر الحكومية المعروفة القريبة من بيتكم.</div>
       </div>
       <div class="field">
         <label>البريد الإلكتروني</label>
@@ -756,23 +744,9 @@ let fbReadyPromise = new Promise((resolve) => {
   else window.addEventListener('firebase-ready', () => { fb = window.__fb; resolve(); }, { once:true });
 });
 
-/* ---------- Conditional ID type fields ---------- */
-const idType = document.getElementById('idType');
-const unifiedCardWrap = document.getElementById('unifiedCardWrap');
+/* ---------- Student ID (unified national card only) ---------- */
+const STUDENT_ID_TYPE = 'البطاقة الوطنية الموحدة';
 const unifiedCardNumber = document.getElementById('unifiedCardNumber');
-
-function updateIdTypeFields(){
-  unifiedCardWrap.classList.add('hidden');
-  unifiedCardNumber.required = false;
-
-  if (idType.value === 'البطاقة الوطنية الموحدة'){
-    unifiedCardWrap.classList.remove('hidden');
-    unifiedCardNumber.required = true;
-  }
-}
-idType.addEventListener('change', updateIdTypeFields);
-idType.addEventListener('change', () => { if (typeof updateCompletion === 'function') updateCompletion(); });
-updateIdTypeFields();
 
 /* ---------- Father ID checkbox ---------- */
 const hasFatherId = document.getElementById('hasFatherId');
@@ -787,151 +761,7 @@ const photoInput = document.getElementById('photoInput');
 const photoPlaceholder = document.getElementById('photoPlaceholder');
 let photoBase64 = "";
 
-function setPhoto(dataUrl){
-  photoBase64 = dataUrl;
-  photoBox.classList.add('has-img');
-  photoBox.innerHTML = `<img src="${photoBase64}"><div class="txt">تم التقاط الصورة (اضغط لإعادة الالتقاط)</div>`;
-  photoBox.appendChild(photoInput);
-  if (typeof updateCompletion === 'function') updateCompletion();
-}
-
-/* ---------- Face camera (KYC style) ---------- */
-const camModal = document.getElementById('camModal');
-const camStage = document.getElementById('camStage');
-const camVideo = document.getElementById('camVideo');
-const camPreview = document.getElementById('camPreview');
-const camFrame = document.getElementById('camFrame');
-const camHint = document.getElementById('camHint');
-const camShot = document.getElementById('camShot');
-const camOk = document.getElementById('camOk');
-const camSwitch = document.getElementById('camSwitch');
-const camCancel = document.getElementById('camCancel');
-let camStream = null, camFacing = 'user', camTimer = null, camShotData = '';
-let faceDetector = null;
-try{ if ('FaceDetector' in window) faceDetector = new FaceDetector({ fastMode:true, maxDetectedFaces:1 }); }catch(_){ faceDetector = null; }
-
-function layoutFrame(){
-  const cw = camStage.clientWidth, ch = camStage.clientHeight;
-  let fh = Math.min(ch * 0.62, cw * 0.8 * 1.25);
-  let fw = fh * 0.8;
-  if (fw > cw * 0.8){ fw = cw * 0.8; fh = fw / 0.8; }
-  const cy = ch * 0.48;
-  camFrame.style.width = fw + 'px';
-  camFrame.style.height = fh + 'px';
-  camFrame.style.left = ((cw - fw) / 2) + 'px';
-  camFrame.style.top = (cy - fh / 2) + 'px';
-  return { cw, ch, fx:(cw - fw) / 2, fy:cy - fh / 2, fw, fh };
-}
-
-function stopCamera(){
-  if (camTimer){ clearInterval(camTimer); camTimer = null; }
-  if (camStream){ camStream.getTracks().forEach(tr => tr.stop()); camStream = null; }
-  camVideo.srcObject = null;
-}
-
-function closeCamera(){
-  stopCamera();
-  camModal.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// تحويل إطار الشاشة إلى إحداثيات الفيديو (object-fit: cover) وقص الوجه فقط
-function captureFace(){
-  const vw = camVideo.videoWidth, vh = camVideo.videoHeight;
-  if (!vw || !vh) return '';
-  const { cw, ch, fx, fy, fw, fh } = layoutFrame();
-  const scale = Math.max(cw / vw, ch / vh);
-  const ox = (cw - vw * scale) / 2, oy = (ch - vh * scale) / 2;
-  let sx = (fx - ox) / scale, sy = (fy - oy) / scale, sw = fw / scale, sh = fh / scale;
-  if (camFacing === 'user') sx = vw - sx - sw; // الفيديو معكوس في المعاينة فقط
-  sx = Math.max(0, sx); sy = Math.max(0, sy);
-  sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
-  const outW = Math.min(480, Math.round(sw)), outH = Math.round(outW * sh / sw);
-  const c = document.createElement('canvas');
-  c.width = outW; c.height = outH;
-  c.getContext('2d').drawImage(camVideo, sx, sy, sw, sh, 0, 0, outW, outH);
-  return c.toDataURL('image/jpeg', 0.85);
-}
-
-async function startCamera(){
-  stopCamera();
-  camStream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: camFacing, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false
-  });
-  camVideo.style.transform = camFacing === 'user' ? 'scaleX(-1)' : 'none';
-  camVideo.srcObject = camStream;
-  await camVideo.play().catch(() => {});
-  layoutFrame();
-  if (faceDetector){
-    camTimer = setInterval(async () => {
-      try{
-        const faces = await faceDetector.detect(camVideo);
-        const ok = faces.length === 1;
-        camFrame.classList.toggle('ok', ok);
-        camHint.textContent = ok ? 'ممتاز، اضغط للالتقاط' : 'ضع وجهك داخل الإطار';
-      }catch(_){ clearInterval(camTimer); camTimer = null; }
-    }, 400);
-  }
-}
-
-function showLive(){
-  camShotData = '';
-  camPreview.style.display = 'none';
-  camVideo.style.display = 'block';
-  camFrame.style.display = 'block';
-  camShot.style.display = 'block';
-  camSwitch.style.display = 'block';
-  camOk.style.display = 'none';
-  camCancel.textContent = 'إغلاق';
-  camHint.textContent = 'ضع وجهك داخل الإطار';
-}
-
-async function openCamera(){
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    alert('الكاميرا غير متاحة في هذا المتصفح، اختر صورة من الجهاز.');
-    photoInput.click();
-    return;
-  }
-  camModal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  showLive();
-  try{
-    await startCamera();
-  }catch(err){
-    closeCamera();
-    alert('تعذّر فتح الكاميرا. اسمح للموقع باستخدام الكاميرا من إعدادات المتصفح، أو اختر صورة من الجهاز.');
-    photoInput.click();
-  }
-}
-
-camShot.addEventListener('click', () => {
-  const data = captureFace();
-  if (!data) return;
-  camShotData = data;
-  stopCamera();
-  camPreview.src = data;
-  camPreview.style.display = 'block';
-  camVideo.style.display = 'none';
-  camFrame.style.display = 'none';
-  camShot.style.display = 'none';
-  camSwitch.style.display = 'none';
-  camOk.style.display = 'block';
-  camCancel.textContent = 'إعادة';
-  camHint.textContent = 'تأكد أن الوجه واضح داخل الصورة';
-});
-camOk.addEventListener('click', () => { if (camShotData) setPhoto(camShotData); closeCamera(); });
-camCancel.addEventListener('click', async () => {
-  if (camShotData){ showLive(); try{ await startCamera(); }catch(_){ closeCamera(); } }
-  else closeCamera();
-});
-camSwitch.addEventListener('click', async () => {
-  camFacing = camFacing === 'user' ? 'environment' : 'user';
-  try{ await startCamera(); }catch(_){ camFacing = 'user'; try{ await startCamera(); }catch(__){} }
-});
-window.addEventListener('resize', () => { if (camModal.classList.contains('open')) layoutFrame(); });
-
-photoInput.addEventListener('click', (e) => e.stopPropagation());
-photoBox.addEventListener('click', () => openCamera());
+photoBox.addEventListener('click', () => photoInput.click());
 
 photoInput.addEventListener('change', () => {
   const file = photoInput.files[0];
@@ -1050,18 +880,11 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  if (idType.value === 'البطاقة الوطنية الموحدة' && !unifiedCardNumber.value.trim()){
+  if (!unifiedCardNumber.value.trim()){
     formMsg.className = 'msg err';
     formMsg.textContent = 'الرجاء إدخال رقم البطاقة الوطنية الموحدة.';
     formMsg.style.display = 'block';
     unifiedCardNumber.focus();
-    return;
-  }
-  if (!document.getElementById('district').value){
-    formMsg.className = 'msg err';
-    formMsg.textContent = 'الرجاء اختيار الحي من القائمة.';
-    formMsg.style.display = 'block';
-    document.getElementById('district').focus();
     return;
   }
 
@@ -1079,8 +902,7 @@ form.addEventListener('submit', async (e) => {
 
   await fbReadyPromise;
 
-  // رقم مرجعي فريد (وقت كامل + جزء عشوائي) يُستخدم أيضاً كمعرّف للمستند، فلا يتصادم مع غيره
-  const refNumber = 'STU-' + Date.now().toString().slice(-8) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const refNumber = 'STU-' + Date.now().toString().slice(-8);
 
   const data = {
     referenceNumber: refNumber,
@@ -1095,7 +917,7 @@ form.addEventListener('submit', async (e) => {
     motherGrandfatherName: document.getElementById('motherGrandfatherName').value.trim(),
     birthDate: document.getElementById('birthDate').value.trim(),
     // 2. وثيقة التعريف
-    idType: idType.value,
+    idType: STUDENT_ID_TYPE,
     unifiedCardNumber: unifiedCardNumber.value.trim(),
     idIssueCountry: document.getElementById('idIssueCountry').value.trim(),
     statisticalNumber: document.getElementById('statisticalNumber').value.trim(),
@@ -1135,31 +957,63 @@ form.addEventListener('submit', async (e) => {
   };
 
   try{
-    // لا يتم حذف أي سجل سابق: كل إرسال يُحفظ كسجل جديد، والتكرار يُعالَج من لوحة الإدارة.
-    // نسخة مؤقتة على جهاز الطالب حتى يتأكد وصول البيانات
-    try{ localStorage.setItem('pendingStudent', JSON.stringify({ id: refNumber, data: { ...data, createdAt: null } })); }catch(_){}
-    // إعادة المحاولة تلقائياً (حتى 4 مرات) بنفس المعرّف، فلا يضيع طالب ولا يتكرر سجله
-    let lastErr = null, saved = false;
-    for (let attempt = 1; attempt <= 4 && !saved; attempt++){
+    // Look for a previous submission of the same student:
+    // by unified card number, civil ID number, or the full four-part name.
+    const previous = new Map(); // docId -> { label, name }
+    const col = fb.collection(fb.db, COLLECTION_NAME);
+    async function runCheck(filters, label){
       try{
-        await fb.setDoc(fb.doc(fb.db, COLLECTION_NAME, refNumber), data);
-        saved = true;
-      }catch(e){
-        lastErr = e;
-        // إذا نجحت محاولة سابقة فعلياً ثم رُفضت إعادة الكتابة، فالسجل موجود بالفعل
-        if (attempt > 1 && e.code === 'permission-denied'){ saved = true; break; }
-        if (e.code === 'permission-denied' || e.code === 'invalid-argument') break;
-        await new Promise(r => setTimeout(r, 1000 * attempt));
+        const snap = await fb.getDocs(fb.query(col, ...filters.map(f => fb.where(f[0], '==', f[1]))));
+        snap.forEach(d => {
+          if (!previous.has(d.id)){
+            const x = d.data();
+            previous.set(d.id, {
+              label,
+              name: [x.studentFirstName, x.fatherName, x.grandfatherName, x.lastName].filter(Boolean).join(' ')
+            });
+          }
+        });
+      }catch(dupErr){
+        console.error('duplicate check failed:', label, dupErr);
       }
     }
-    if (!saved) throw lastErr;
-    try{ localStorage.removeItem('pendingStudent'); }catch(_){}
+
+    if (data.unifiedCardNumber) await runCheck([['unifiedCardNumber', data.unifiedCardNumber]], 'رقم البطاقة الموحدة');
+    if (data.studentFirstName && data.fatherName && data.grandfatherName && data.lastName){
+      await runCheck([
+        ['studentFirstName', data.studentFirstName],
+        ['fatherName', data.fatherName],
+        ['grandfatherName', data.grandfatherName],
+        ['lastName', data.lastName]
+      ], 'الاسم');
+    }
+
+    if (previous.size > 0){
+      const first = previous.values().next().value;
+      const reasons = [...new Set([...previous.values()].map(m => m.label))].join(' و');
+      const ok = confirm('⚠ يوجد استمارة سابقة مسجلة بنفس ' + reasons + (first.name ? ' (' + first.name + ')' : '') +
+        '.\n\nهل تريد استبدال الاستمارة السابقة بهذه الاستمارة الجديدة؟');
+      if (!ok){
+        formMsg.className = 'msg err';
+        formMsg.textContent = 'تم إلغاء الإرسال، ولم يتم تغيير الاستمارة السابقة.';
+        formMsg.style.display = 'block';
+        return;
+      }
+    }
+
+    await fb.addDoc(fb.collection(fb.db, COLLECTION_NAME), data);
+
+    // The new form is saved; now remove the old one(s) it replaces
+    for (const oldId of previous.keys()){
+      try{ await fb.deleteDoc(fb.doc(fb.db, COLLECTION_NAME, oldId)); }
+      catch(delErr){ console.error('failed to remove old submission', oldId, delErr); }
+    }
     successMsg.style.display = 'block';
     refNumOut.textContent = refNumber;
     form.reset();
     photoBase64 = "";
     photoBox.classList.remove('has-img');
-    photoBox.innerHTML = `<div class="icon">📸</div><div class="txt">اضغط لفتح الكاميرا والتقاط صورة الوجه</div>`;
+    photoBox.innerHTML = `<div class="icon">📸</div><div class="txt">اضغط لاختيار صورة من الكاميرا أو المعرض</div>`;
     photoBox.appendChild(photoInput);
     window.scrollTo({top:0, behavior:'smooth'});
   }catch(err){
@@ -1168,7 +1022,7 @@ form.addEventListener('submit', async (e) => {
     if (err.code === 'permission-denied'){
       formMsg.textContent = 'تعذّر الإرسال بسبب إعدادات الصلاحيات في قاعدة البيانات. الرجاء إبلاغ إدارة المدرسة بهذه المشكلة التقنية.';
     } else if (err.code === 'unavailable' || err.code === 'deadline-exceeded'){
-      formMsg.textContent = '⚠ الاتصال بالخادم كان بطيئاً أو انقطع أثناء الإرسال. جرّب الإرسال مرة أخرى بعد قليل، ولا تغلق الصفحة.';
+      formMsg.textContent = '⚠ الاتصال بالخادم كان بطيئاً أو انقطع أثناء الإرسال. قد تكون بياناتك وصلت فعلاً رغم هذه الرسالة — تحقق من لوحة الإدارة قبل إعادة الإرسال حتى لا تتكرر بياناتك. إذا لم تكن موجودة، أعد المحاولة.';
     } else {
       formMsg.textContent = 'حدث خطأ أثناء الإرسال (' + (err.code || err.message || 'غير معروف') + '). تحقق من الاتصال بالإنترنت وحاول مرة أخرى.';
     }
@@ -1180,6 +1034,23 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
+
+/* ---------- Registration deadline countdown (25/11/2026) ---------- */
+(function(){
+  const el = document.getElementById('noticeCountdown');
+  if (!el) return;
+  const deadline = new Date(2026, 10, 25); // 25 November 2026
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = Math.round((deadline - today) / 86400000);
+  let txt;
+  if (days > 10) txt = '⏳ متبقي ' + days + ' يوماً على إغلاق التسجيل';
+  else if (days > 2) txt = '⏳ متبقي ' + days + ' أيام على إغلاق التسجيل';
+  else if (days === 2) txt = '⏳ متبقي يومان على إغلاق التسجيل';
+  else if (days === 1) txt = '⏳ غداً هو آخر يوم للتسجيل';
+  else if (days === 0) txt = '🔥 اليوم هو آخر يوم للتسجيل';
+  else { txt = '⛔ انتهى موعد التسجيل'; el.classList.add('closed'); }
+  el.textContent = txt;
+})();
 </script>
 </body>
 </html>
