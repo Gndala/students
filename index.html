@@ -320,7 +320,7 @@
   <div class="notice-icon">📢</div>
   <div class="notice-body">
     <div class="notice-title">إعلان مهم لجميع الطلاب</div>
-    <div class="notice-text">على <b>جميع الطلاب</b> التسجيل في هذه الاستمارة، وآخر موعد للتسجيل <span class="notice-date">يوم 25/11/2026</span></div>
+    <div class="notice-text">على <b>جميع الطلاب</b> التسجيل في هذه الاستمارة، وآخر موعد للتسجيل <span class="notice-date">يوم 27/11/2026</span></div>
     <div class="notice-warn">وبعد الإغلاق يتحمّل الطالب كافة المسؤولية الموجّهة إليه من قِبل التربية.</div>
     <div class="notice-countdown" id="noticeCountdown"></div>
   </div>
@@ -1035,11 +1035,11 @@ form.addEventListener('submit', async (e) => {
 });
 
 
-/* ---------- Registration deadline countdown (25/11/2026) ---------- */
+/* ---------- Registration deadline countdown (27/11/2026) ---------- */
 (function(){
   const el = document.getElementById('noticeCountdown');
   if (!el) return;
-  const deadline = new Date(2026, 10, 25); // 25 November 2026
+  const deadline = new Date(2026, 10, 27); // 27 November 2026
   const today = new Date(); today.setHours(0,0,0,0);
   const days = Math.round((deadline - today) / 86400000);
   let txt;
