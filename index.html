@@ -1001,6 +1001,7 @@ form.addEventListener('submit', async (e) => {
       }
     }
 
+    data.replacedPrevious = previous.size > 0;
     await fb.addDoc(fb.collection(fb.db, COLLECTION_NAME), data);
 
     // The new form is saved; now remove the old one(s) it replaces
